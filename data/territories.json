@@ -1,0 +1,42 @@
+[
+    {
+        "id": 1,
+        "territory_name": "Downtown District",
+        "map_link": "https://www.google.com/maps",
+        "map_image_url": "/maps/1.svg",
+        "map_description": "Central business district with high foot traffic.",
+        "active": true
+    },
+    {
+        "id": 2,
+        "territory_name": "uptown Area",
+        "map_link": "https://www.google.com/maps",
+        "map_image_url": "/maps/2.svg",
+        "map_description": "Residential area with parks and schools.",
+        "active": true
+    },
+    {
+        "id": 3,
+        "territory_name": "Midtown Plaza",
+        "map_link": "https://www.google.com/maps",
+        "map_image_url": "/maps/3.svg",
+        "map_description": "Shopping centers and office buildings.",
+        "active": true
+    },
+    {
+        "id": 4,
+        "territory_name": "Suburban Heights",
+        "map_link": "https://www.google.com/maps",
+        "map_image_url": "/maps/4.svg",
+        "map_description": "Family-friendly neighborhoods.",
+        "active": true
+    },
+    {
+        "id": 5,
+        "territory_name": "Industrial Park",
+        "map_link": "https://www.google.com/maps",
+        "map_image_url": "/maps/5.svg",
+        "map_description": "Warehouses and factories.",
+        "active": true
+    }
+]
