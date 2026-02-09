@@ -18,7 +18,7 @@ export default function ClaimPage() {
 
                 if (response.ok) {
                     const data = await response.json();
-                    router.push(`/view/${data.territory.id}`);
+                    router.replace(`/view/${data.territory.id}`);
                 } else {
                     const data = await response.json();
                     if (data.exhausted) {
