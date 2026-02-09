@@ -9,6 +9,7 @@ export interface Territory {
     map_image_url: string;
     map_description: string;
     active: boolean;
+    isAssigned?: boolean;
 }
 
 export interface Assignment {
@@ -42,7 +43,11 @@ function initializeData() {
 // Get all territories, optionally filtering by active status
 export function getTerritories(): Territory[] {
     if (!isInitialized) initializeData();
-    return territoriesCache || [];
+    const territories = territoriesCache || [];
+    return territories.map(t => ({
+        ...t,
+        isAssigned: assignedTerritoryIds.has(t.id)
+    }));
 }
 
 // Get dispenser stats
@@ -99,7 +104,14 @@ export function assignNextTerritory(): Territory | null {
 // Get a specific territory by ID
 export function getTerritoryById(id: number): Territory | undefined {
     if (!isInitialized) initializeData();
-    return getTerritories().find(t => t.id === id);
+    const territory = getTerritories().find(t => t.id === id);
+    if (territory) {
+        return {
+            ...territory,
+            isAssigned: assignedTerritoryIds.has(territory.id)
+        };
+    }
+    return undefined;
 }
 
 // Toggle territory active status (Admin function)

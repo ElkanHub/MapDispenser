@@ -83,11 +83,29 @@ export default function AdminPage() {
                                     <div className="flex items-center gap-2 mb-1">
                                         <h3 className="font-semibold text-lg truncate">{territory.territory_name}</h3>
                                         <Badge variant="secondary" className="text-xs">#{territory.id}</Badge>
+                                        <Badge
+                                            variant={territory.isAssigned ? "default" : "outline"}
+                                            className={territory.isAssigned ? "bg-green-600 hover:bg-green-700" : "text-slate-500"}
+                                        >
+                                            {territory.isAssigned ? "Scanned" : "Unscanned"}
+                                        </Badge>
                                     </div>
                                     <p className="text-sm text-slate-500 truncate">{territory.map_description}</p>
                                 </div>
 
                                 <div className="flex items-center gap-4">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                            const url = `${window.location.origin}/view/${territory.id}`;
+                                            navigator.clipboard.writeText(url);
+                                            // Optional: Add toast notification here
+                                        }}
+                                        title="Copy Link"
+                                    >
+                                        Share
+                                    </Button>
                                     <div className="flex flex-col items-end gap-1">
                                         <span className="text-xs font-medium text-slate-500 uppercase">Status</span>
                                         <Switch
