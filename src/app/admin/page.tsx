@@ -62,9 +62,22 @@ export default function AdminPage() {
                         <h1 className="text-3xl font-bold text-slate-900 icon-text-gap">Territory Admin</h1>
                         <p className="text-slate-500">Manage availability and view status</p>
                     </div>
-                    <Button onClick={fetchTerritories} variant="outline" size="icon">
-                        <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            onClick={async () => {
+                                if (confirm("Are you sure you want to RESET the entire system? This will clear all assignments.")) {
+                                    await fetch('/api/admin/reset', { method: 'POST' });
+                                    fetchTerritories();
+                                }
+                            }}
+                            variant="destructive"
+                        >
+                            Reset System
+                        </Button>
+                        <Button onClick={fetchTerritories} variant="outline" size="icon">
+                            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                        </Button>
+                    </div>
                 </div>
 
                 <div className="grid gap-4">
