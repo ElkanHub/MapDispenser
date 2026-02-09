@@ -11,6 +11,7 @@ import { Loader2, RefreshCw } from 'lucide-react';
 export default function AdminPage() {
     const [territories, setTerritories] = useState<Territory[]>([]);
     const [loading, setLoading] = useState(true);
+    const [copiedId, setCopiedId] = useState<number | null>(null);
 
     const fetchTerritories = async () => {
         setLoading(true);
@@ -108,16 +109,21 @@ export default function AdminPage() {
 
                                 <div className="flex items-center gap-4">
                                     <Button
-                                        variant="ghost"
+                                        variant={copiedId === territory.id ? "secondary" : "ghost"}
                                         size="sm"
                                         onClick={() => {
                                             const url = `${window.location.origin}/view/${territory.id}`;
-                                            navigator.clipboard.writeText(url);
-                                            // Optional: Add toast notification here
+                                            navigator.clipboard.writeText(url).then(() => {
+                                                setCopiedId(territory.id);
+                                                setTimeout(() => setCopiedId(null), 2000);
+                                            }).catch(() => {
+                                                alert(`Could not copy to clipboard. URL: ${url}`);
+                                            });
                                         }}
                                         title="Copy Link"
+                                        className="min-w-[70px]"
                                     >
-                                        Share
+                                        {copiedId === territory.id ? "Copied!" : "Share"}
                                     </Button>
                                     <div className="flex flex-col items-end gap-1">
                                         <span className="text-xs font-medium text-slate-500 uppercase">Status</span>
