@@ -111,14 +111,31 @@ export default function AdminPage() {
                                     <Button
                                         variant={copiedId === territory.id ? "secondary" : "ghost"}
                                         size="sm"
-                                        onClick={() => {
+                                        onClick={async () => {
                                             const url = `${window.location.origin}/view/${territory.id}`;
+
+                                            // 1. Copy to clipboard
                                             navigator.clipboard.writeText(url).then(() => {
                                                 setCopiedId(territory.id);
                                                 setTimeout(() => setCopiedId(null), 2000);
                                             }).catch(() => {
                                                 alert(`Could not copy to clipboard. URL: ${url}`);
                                             });
+
+                                            // 2. Trigger Assignment (Mark as Scanned)
+                                            try {
+                                                const res = await fetch('/api/admin/assign', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ id: territory.id }),
+                                                });
+                                                if (res.ok) {
+                                                    // Refresh list to update badge
+                                                    fetchTerritories();
+                                                }
+                                            } catch (e) {
+                                                console.error("Failed to mark as assigned", e);
+                                            }
                                         }}
                                         title="Copy Link"
                                         className="min-w-[70px]"

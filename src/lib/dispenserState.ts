@@ -101,6 +101,30 @@ export function assignNextTerritory(): Territory | null {
     return nextTerritory;
 }
 
+// Assign a specific territory by ID (e.g. via Admin Share)
+export function assignSpecificTerritory(id: number): boolean {
+    if (!isInitialized) initializeData();
+
+    // Check if already assigned
+    if (assignedTerritoryIds.has(id)) {
+        return true; // Already assigned, consider it a success or no-op
+    }
+
+    const territory = getTerritories().find(t => t.id === id);
+    if (!territory) {
+        return false; // Territory not found
+    }
+
+    // Mark as assigned
+    assignedTerritoryIds.add(id);
+    assignments.push({
+        territoryId: id,
+        assignedAt: new Date().toISOString()
+    });
+
+    return true;
+}
+
 // Get a specific territory by ID
 export function getTerritoryById(id: number): Territory | undefined {
     if (!isInitialized) initializeData();
