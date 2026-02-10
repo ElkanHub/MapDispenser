@@ -1,15 +1,15 @@
 [
     {
         "id": 1,
-        "territory_name": "Downtown District",
+        "territory_name": "KHT 1",
         "map_link": "https://www.google.com/maps",
         "map_image_url": "/maps/1.svg",
-        "map_description": "Central business district with high foot traffic.",
+        "map_description": "This teritor includes Bro Gokah's house and his immediate neighbors. It extends one lane behind the house and cuts right back to the road leading to the Kingdom Hall.",
         "active": true
     },
     {
         "id": 2,
-        "territory_name": "uptown Area",
+        "territory_name": "KHT 2",
         "map_link": "https://www.google.com/maps",
         "map_image_url": "/maps/2.svg",
         "map_description": "Residential area with parks and schools.",
@@ -17,7 +17,7 @@
     },
     {
         "id": 3,
-        "territory_name": "Midtown Plaza",
+        "territory_name": "KHT 3",
         "map_link": "https://www.google.com/maps",
         "map_image_url": "/maps/3.svg",
         "map_description": "Shopping centers and office buildings.",
@@ -25,7 +25,7 @@
     },
     {
         "id": 4,
-        "territory_name": "Suburban Heights",
+        "territory_name": "KHT 4",
         "map_link": "https://www.google.com/maps",
         "map_image_url": "/maps/4.svg",
         "map_description": "Family-friendly neighborhoods.",
@@ -33,7 +33,87 @@
     },
     {
         "id": 5,
-        "territory_name": "Industrial Park",
+        "territory_name": "KHT 5",
+        "map_link": "https://www.google.com/maps",
+        "map_image_url": "/maps/5.svg",
+        "map_description": "Warehouses and factories.",
+        "active": true
+    },
+    {
+        "id": 6,
+        "territory_name": "KHT 6",
+        "map_link": "https://www.google.com/maps",
+        "map_image_url": "/maps/5.svg",
+        "map_description": "Warehouses and factories.",
+        "active": true
+    },
+    {
+        "id": 7,
+        "territory_name": "KHT 7",
+        "map_link": "https://www.google.com/maps",
+        "map_image_url": "/maps/5.svg",
+        "map_description": "Warehouses and factories.",
+        "active": true
+    },
+    {
+        "id": 8,
+        "territory_name": "KHT 8",
+        "map_link": "https://www.google.com/maps",
+        "map_image_url": "/maps/5.svg",
+        "map_description": "Warehouses and factories.",
+        "active": true
+    },
+    {
+        "id": 9,
+        "territory_name": "KHT 9",
+        "map_link": "https://www.google.com/maps",
+        "map_image_url": "/maps/5.svg",
+        "map_description": "Warehouses and factories.",
+        "active": true
+    },
+    {
+        "id": 10,
+        "territory_name": "KHT 10",
+        "map_link": "https://www.google.com/maps",
+        "map_image_url": "/maps/5.svg",
+        "map_description": "Warehouses and factories.",
+        "active": true
+    },
+    {
+        "id": 11,
+        "territory_name": "KHT 11",
+        "map_link": "https://www.google.com/maps",
+        "map_image_url": "/maps/5.svg",
+        "map_description": "Warehouses and factories.",
+        "active": true
+    },
+    {
+        "id": 12,
+        "territory_name": "KHT 12",
+        "map_link": "https://www.google.com/maps",
+        "map_image_url": "/maps/5.svg",
+        "map_description": "Warehouses and factories.",
+        "active": true
+    },
+    {
+        "id": 13,
+        "territory_name": "KHT 13",
+        "map_link": "https://www.google.com/maps",
+        "map_image_url": "/maps/5.svg",
+        "map_description": "Warehouses and factories.",
+        "active": true
+    },
+    {
+        "id": 14,
+        "territory_name": "KHT 14",
+        "map_link": "https://www.google.com/maps",
+        "map_image_url": "/maps/5.svg",
+        "map_description": "Warehouses and factories.",
+        "active": true
+    },
+    {
+        "id": 15,
+        "territory_name": "KHT 15",
         "map_link": "https://www.google.com/maps",
         "map_image_url": "/maps/5.svg",
         "map_description": "Warehouses and factories.",
