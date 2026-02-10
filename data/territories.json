@@ -2,17 +2,18 @@
     {
         "id": 1,
         "territory_name": "KHT 1",
-        "map_link": "https://www.google.com/maps",
+        "map_link": "https://maps.app.goo.gl/VJEx7y6rwALr6qYB6",
         "map_image_url": "/maps/1.png",
-        "map_description": "This teritor includes Bro Gokah's house and his immediate neighbors. It extends one lane behind the house and cuts right back to the road leading to the Kingdom Hall.",
+        "map_description": "This territory includes Bro Gokah's house and his immediate neighbors. It extends one lane behind the house and cuts right back to the road leading to the Kingdom Hall.",
         "active": true
+        
     },
     {
         "id": 2,
         "territory_name": "KHT 2",
-        "map_link": "https://www.google.com/maps",
+        "map_link": "https://maps.app.goo.gl/KFHZti7tp9cHHLED8",
         "map_image_url": "/maps/2.png",
-        "map_description": "Residential area with parks and schools.",
+        "map_description": "This territory starts two lanes behind Bro Gokah's house and extends two lanes further.",
         "active": true
     },
     {

@@ -134,12 +134,35 @@ export default function ViewTerritoryClient({ territory }: { territory: Territor
             {/* Lightbox Dialog */}
             <Dialog open={showLightbox} onOpenChange={setShowLightbox}>
                 <DialogContent className="max-w-5xl w-[95vw] h-[90vh] p-0 overflow-hidden bg-transparent border-0 shadow-none flex items-center justify-center">
-                    <div className="relative w-full h-full flex items-center justify-center bg-transparent" onClick={() => setShowLightbox(false)}>
-                        <img
-                            src={territory.map_image_url}
-                            alt={`Map of ${territory.territory_name}`}
-                            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl scale-100 hover:scale-150 transition-transform duration-300 cursor-zoom-out"
-                        />
+                    <div
+                        className="relative w-full h-full flex items-center justify-center bg-transparent overflow-hidden"
+                        onClick={(e) => {
+                            if (e.target === e.currentTarget) setShowLightbox(false);
+                        }}
+                    >
+                        <div
+                            className="relative w-full h-full flex items-center justify-center"
+                            onMouseMove={(e) => {
+                                const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+                                const x = ((e.clientX - left) / width) * 100;
+                                const y = ((e.clientY - top) / height) * 100;
+                                e.currentTarget.style.setProperty('--x', `${x}%`);
+                                e.currentTarget.style.setProperty('--y', `${y}%`);
+                            }}
+                            style={{
+                                '--x': '50%',
+                                '--y': '50%',
+                            } as React.CSSProperties}
+                        >
+                            <img
+                                src={territory.map_image_url}
+                                alt={`Map of ${territory.territory_name}`}
+                                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl transition-transform duration-100 ease-out cursor-zoom-out hover:scale-[2.5]"
+                                style={{
+                                    transformOrigin: 'var(--x) var(--y)',
+                                }}
+                            />
+                        </div>
                     </div>
                     <Button
                         className="absolute top-4 right-4 rounded-full bg-black/50 hover:bg-black/70 text-white border-0"
