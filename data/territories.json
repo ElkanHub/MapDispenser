@@ -19,32 +19,32 @@
     {
         "id": 3,
         "territory_name": "KHT 3",
-        "map_link": "https://www.google.com/maps",
-        "map_image_url": "/maps/3.svg",
-        "map_description": "Shopping centers and office buildings.",
+        "map_link": "https://maps.app.goo.gl/FEbemRPXsJJrwSh97",
+        "map_image_url": "/maps/3.png",
+        "map_description": "The location on the Google map is the start of the territory which then covers two lanes down and cuts to the Maryland School. ",
         "active": true
     },
     {
         "id": 4,
         "territory_name": "KHT 4",
-        "map_link": "https://www.google.com/maps",
-        "map_image_url": "/maps/4.svg",
-        "map_description": "Family-friendly neighborhoods.",
+        "map_link": "https://maps.app.goo.gl/AgXGEbTgpZXrkwyG8",
+        "map_image_url": "/maps/4.png",
+        "map_description": "This territory is a big dispersed settlement behind the Deeperlife Land. This territory will be worked by more than two groups of publishers. The directions on the map starts from Bro Gokah's house to the starting point of the territory.",
         "active": true
     },
     {
         "id": 5,
         "territory_name": "KHT 5",
-        "map_link": "https://www.google.com/maps",
-        "map_image_url": "/maps/5.svg",
-        "map_description": "Warehouses and factories.",
+        "map_link": "https://maps.app.goo.gl/toJowLJWP5DeZYmA9",
+        "map_image_url": "/maps/5.png",
+        "map_description": "This territory includes the Kingdom Hall and stretches to the next junction after the Celestial school wall",
         "active": true
     },
     {
         "id": 6,
         "territory_name": "KHT 6",
         "map_link": "https://www.google.com/maps",
-        "map_image_url": "/maps/5.svg",
+        "map_image_url": "/maps/6.png",
         "map_description": "Warehouses and factories.",
         "active": true
     },
@@ -52,7 +52,7 @@
         "id": 7,
         "territory_name": "KHT 7",
         "map_link": "https://www.google.com/maps",
-        "map_image_url": "/maps/5.svg",
+        "map_image_url": "/maps/7.png",
         "map_description": "Warehouses and factories.",
         "active": true
     },
@@ -60,7 +60,7 @@
         "id": 8,
         "territory_name": "KHT 8",
         "map_link": "https://www.google.com/maps",
-        "map_image_url": "/maps/5.svg",
+        "map_image_url": "/maps/8.png",
         "map_description": "Warehouses and factories.",
         "active": true
     },
@@ -68,7 +68,7 @@
         "id": 9,
         "territory_name": "KHT 9",
         "map_link": "https://www.google.com/maps",
-        "map_image_url": "/maps/5.svg",
+        "map_image_url": "/maps/9.png",
         "map_description": "Warehouses and factories.",
         "active": true
     },
@@ -76,7 +76,7 @@
         "id": 10,
         "territory_name": "KHT 10",
         "map_link": "https://www.google.com/maps",
-        "map_image_url": "/maps/5.svg",
+        "map_image_url": "/maps/10.png",
         "map_description": "Warehouses and factories.",
         "active": true
     },
@@ -84,7 +84,7 @@
         "id": 11,
         "territory_name": "KHT 11",
         "map_link": "https://www.google.com/maps",
-        "map_image_url": "/maps/5.svg",
+        "map_image_url": "/maps/11.png",
         "map_description": "Warehouses and factories.",
         "active": true
     },
@@ -92,7 +92,7 @@
         "id": 12,
         "territory_name": "KHT 12",
         "map_link": "https://www.google.com/maps",
-        "map_image_url": "/maps/5.svg",
+        "map_image_url": "/maps/12.png",
         "map_description": "Warehouses and factories.",
         "active": true
     },
@@ -100,7 +100,7 @@
         "id": 13,
         "territory_name": "KHT 13",
         "map_link": "https://www.google.com/maps",
-        "map_image_url": "/maps/5.svg",
+        "map_image_url": "/maps/13.png",
         "map_description": "Warehouses and factories.",
         "active": true
     },
@@ -108,7 +108,7 @@
         "id": 14,
         "territory_name": "KHT 14",
         "map_link": "https://www.google.com/maps",
-        "map_image_url": "/maps/5.svg",
+        "map_image_url": "/maps/14.png",
         "map_description": "Warehouses and factories.",
         "active": true
     },
@@ -116,7 +116,7 @@
         "id": 15,
         "territory_name": "KHT 15",
         "map_link": "https://www.google.com/maps",
-        "map_image_url": "/maps/5.svg",
+        "map_image_url": "/maps/15.png",
         "map_description": "Warehouses and factories.",
         "active": true
     }
