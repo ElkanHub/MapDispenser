@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, RefreshCw } from 'lucide-react';
+import { Loader2, RefreshCw, HomeIcon } from 'lucide-react';
+import Link from 'next/link';
 
 export default function AdminPage() {
     const [territories, setTerritories] = useState<Territory[]>([]);
@@ -64,6 +65,7 @@ export default function AdminPage() {
                         <p className="text-slate-500">Manage availability and view status</p>
                     </div>
                     <div className="flex gap-2">
+                        <Link href="https://map-dispenser.vercel.app/"><Button> <HomeIcon />Back</Button></Link>
                         <Button
                             onClick={async () => {
                                 if (confirm("Are you sure you want to RESET the entire system? This will clear all assignments.")) {
