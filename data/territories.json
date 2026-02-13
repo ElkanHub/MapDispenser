@@ -6,7 +6,6 @@
         "map_image_url": "/maps/1.png",
         "map_description": "This territory includes Bro Gokah's house and his immediate neighbors. It extends one lane behind the house and cuts right back to the road leading to the Kingdom Hall.",
         "active": true
-        
     },
     {
         "id": 2,
@@ -29,7 +28,7 @@
         "territory_name": "KHT 4",
         "map_link": "https://maps.app.goo.gl/AgXGEbTgpZXrkwyG8",
         "map_image_url": "/maps/4.png",
-        "map_description": "This territory is a big dispersed settlement behind the Deeperlife Land. This territory will be worked by more than two groups of publishers. The directions on the map starts from Bro Gokah's house to the starting point of the territory.",
+        "map_description": "%%This territory is a big dispersed settlement behind the Deeperlife Land. This territory will be worked by more than two groups of publishers. The directions on the map starts from Bro Gokah's house to the starting point of the territory.",
         "active": true
     },
     {
@@ -43,17 +42,17 @@
     {
         "id": 6,
         "territory_name": "KHT 6",
-        "map_link": "https://www.google.com/maps",
+        "map_link": "https://maps.app.goo.gl/s44AP5SKMAeTGtJA8",
         "map_image_url": "/maps/6.png",
-        "map_description": "Warehouses and factories.",
+        "map_description": "This territory begins from Comodor Villa Junction opposite the network pole to the Celestial school junction that leads to the Kingdom Hall from the main road. It cuts down two lanes in, towards the Kingdom Hall.",
         "active": true
     },
     {
         "id": 7,
         "territory_name": "KHT 7",
-        "map_link": "https://www.google.com/maps",
+        "map_link": "https://maps.app.goo.gl/XZxn2NGnmsjZU1Vk9",
         "map_image_url": "/maps/7.png",
-        "map_description": "Warehouses and factories.",
+        "map_description": "This territory starts frm the next junctions after the Big house on the left coming down from the Celestial Junction. It covers the whole sectiond towards the Kingdom hall and ends at the white house adjacent the shop after the Kingdom Hall.",
         "active": true
     },
     {
@@ -61,23 +60,23 @@
         "territory_name": "KHT 8",
         "map_link": "https://www.google.com/maps",
         "map_image_url": "/maps/8.png",
-        "map_description": "Warehouses and factories.",
+        "map_description": "%%%This is a vast dispersed territory located at the Maryland School. This territory can be worked by more tha three groups. The terrain and houses can only be accessed by foot.",
         "active": true
     },
     {
         "id": 9,
         "territory_name": "KHT 9",
-        "map_link": "https://www.google.com/maps",
+        "map_link": "https://maps.app.goo.gl/vBfWKYXHxVG3xEce9",
         "map_image_url": "/maps/9.png",
-        "map_description": "Warehouses and factories.",
+        "map_description": "This territory starts from the junction of the new chruch on the road leading to the kingdom Hall. It cuts down and includes the Celestial school.",
         "active": true
     },
     {
         "id": 10,
         "territory_name": "KHT 10",
-        "map_link": "https://www.google.com/maps",
+        "map_link": "https://maps.app.goo.gl/xcDvJsw6wPq4CgsW9",
         "map_image_url": "/maps/10.png",
-        "map_description": "Warehouses and factories.",
+        "map_description": "This territory starts from the celestial school junction down to the junction rigth where the new church is being built. It covers the entire right side of the road and stretches to the jucntion opposite Club Safari.",
         "active": true
     },
     {

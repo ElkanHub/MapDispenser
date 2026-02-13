@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { MapPin, Users, CheckCircle, AlertCircle } from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 interface Stats {
   total: number;
@@ -105,6 +107,7 @@ export default function DispenserPage() {
               <Users className="h-5 w-5 text-indigo-600" />
               Distribution Status
             </CardTitle>
+            <Link href="https://map-dispenser.vercel.app/admin"><Button variant="outline" >See all Territories</Button></Link>
           </CardHeader>
           <CardContent className="space-y-6">
 
