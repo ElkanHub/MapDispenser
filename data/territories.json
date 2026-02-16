@@ -82,41 +82,9 @@
     {
         "id": 11,
         "territory_name": "KHT 11",
-        "map_link": "https://www.google.com/maps",
+        "map_link": "https://maps.app.goo.gl/kApE6MNSq9GrD7bh9",
         "map_image_url": "/maps/11.png",
-        "map_description": "Warehouses and factories.",
-        "active": true
-    },
-    {
-        "id": 12,
-        "territory_name": "KHT 12",
-        "map_link": "https://www.google.com/maps",
-        "map_image_url": "/maps/12.png",
-        "map_description": "Warehouses and factories.",
-        "active": true
-    },
-    {
-        "id": 13,
-        "territory_name": "KHT 13",
-        "map_link": "https://www.google.com/maps",
-        "map_image_url": "/maps/13.png",
-        "map_description": "Warehouses and factories.",
-        "active": true
-    },
-    {
-        "id": 14,
-        "territory_name": "KHT 14",
-        "map_link": "https://www.google.com/maps",
-        "map_image_url": "/maps/14.png",
-        "map_description": "Warehouses and factories.",
-        "active": true
-    },
-    {
-        "id": 15,
-        "territory_name": "KHT 15",
-        "map_link": "https://www.google.com/maps",
-        "map_image_url": "/maps/15.png",
-        "map_description": "Warehouses and factories.",
+        "map_description": "%%%This territory streches the left side from the Noble estate Junction down the road. This territory is huge and disperesed. It can be worked by more than three groups of publishers.",
         "active": true
     }
 ]
