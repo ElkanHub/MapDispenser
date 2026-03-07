@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getTerritories, toggleTerritoryActive } from '@/lib/dispenserState';
+import { getTerritories, toggleTerritoryActive, setTerritoriesActive } from '@/lib/dispenserState';
 
 export async function GET() {
     const territories = getTerritories();
@@ -9,6 +9,18 @@ export async function GET() {
 export async function PATCH(request: Request) {
     try {
         const body = await request.json();
+
+        if (body.ids && Array.isArray(body.ids) && typeof body.active === 'boolean') {
+            const success = setTerritoriesActive(body.ids, body.active);
+            if (!success) {
+                return NextResponse.json(
+                    { error: 'Failed to update territories' },
+                    { status: 500 }
+                );
+            }
+            return NextResponse.json({ success: true });
+        }
+
         const { id } = body;
 
         if (typeof id !== 'number') {

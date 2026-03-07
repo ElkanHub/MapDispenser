@@ -154,6 +154,22 @@ export function toggleTerritoryActive(id: number): boolean {
     return false;
 }
 
+// Toggle multiple territories active status (Admin function)
+export function setTerritoriesActive(ids: number[], active: boolean): boolean {
+    if (!isInitialized) initializeData();
+
+    if (!territoriesCache) return false;
+
+    let updated = false;
+    for (const t of territoriesCache) {
+        if (ids.includes(t.id)) {
+            t.active = active;
+            updated = true;
+        }
+    }
+    return updated;
+}
+
 // Reset all assignments (Admin function)
 export function resetAssignments() {
     assignedTerritoryIds = new Set();
