@@ -14,6 +14,7 @@ export default function AdminPage() {
     const [loading, setLoading] = useState(true);
     const [copiedId, setCopiedId] = useState<number | null>(null);
     const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+    const [previewTerritory, setPreviewTerritory] = useState<Territory | null>(null);
 
     const toggleGroupExpanded = (prefix: string) => {
         setExpandedGroups(prev => ({
@@ -161,7 +162,10 @@ export default function AdminPage() {
                                         {groupTerritories.map((territory) => (
                                             <Card key={territory.id} className="overflow-hidden">
                                                 <div className="flex items-center p-6 gap-4">
-                                                    <div className="h-16 w-16 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200">
+                                                    <div
+                                                        className="h-16 w-16 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200 cursor-pointer hover:opacity-80 transition-opacity"
+                                                        onClick={() => setPreviewTerritory(territory)}
+                                                    >
                                                         <img
                                                             src={territory.map_image_url}
                                                             alt=""
@@ -236,6 +240,45 @@ export default function AdminPage() {
                     })}
                 </div>
             </div>
+
+            {/* Preview Modal */}
+            {previewTerritory && (
+                <div
+                    className="fixed inset-0 bg-black/60 z-50 flex flex-col items-center justify-center p-6"
+                    onClick={() => setPreviewTerritory(null)}
+                >
+                    <div
+                        className="bg-white dark:bg-slate-900 rounded-xl max-w-2xl w-full p-1 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="relative bg-slate-100 dark:bg-slate-800 rounded-t-lg overflow-hidden flex-shrink-0 min-h-[40vh]">
+                            <img
+                                src={previewTerritory.map_image_url}
+                                alt={previewTerritory.territory_name}
+                                className="w-full h-full object-contain absolute inset-0"
+                            />
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                className="absolute top-4 right-4 h-8 w-8 rounded-full p-0"
+                                onClick={() => setPreviewTerritory(null)}
+                            >
+                                <span className="sr-only">Close</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                            </Button>
+                        </div>
+                        <div className="p-6 overflow-y-auto">
+                            <div className="flex items-center gap-3 mb-3">
+                                <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{previewTerritory.territory_name}</h3>
+                                <Badge variant="secondary">#{previewTerritory.id}</Badge>
+                            </div>
+                            <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
+                                {previewTerritory.map_description}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
