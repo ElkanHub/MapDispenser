@@ -6,13 +6,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, RefreshCw, HomeIcon } from 'lucide-react';
+import { Loader2, RefreshCw, HomeIcon, ChevronDown, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminPage() {
     const [territories, setTerritories] = useState<Territory[]>([]);
     const [loading, setLoading] = useState(true);
     const [copiedId, setCopiedId] = useState<number | null>(null);
+    const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+
+    const toggleGroupExpanded = (prefix: string) => {
+        setExpandedGroups(prev => ({
+            ...prev,
+            [prefix]: prev[prefix] === undefined ? false : !prev[prefix]
+        }));
+    };
 
     const fetchTerritories = async () => {
         setLoading(true);
@@ -122,15 +130,24 @@ export default function AdminPage() {
                 <div className="space-y-8">
                     {Object.entries(groupedTerritories).map(([prefix, groupTerritories]) => {
                         const isAllActive = groupTerritories.every(t => t.active);
+                        const isExpanded = expandedGroups[prefix] !== false;
 
                         return (
                             <div key={prefix} className="space-y-4">
                                 <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800">
-                                    <div>
-                                        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Group {prefix}</h2>
-                                        <p className="text-sm text-slate-500">{groupTerritories.length} territories</p>
+                                    <div
+                                        className="flex items-center gap-3 cursor-pointer select-none"
+                                        onClick={() => toggleGroupExpanded(prefix)}
+                                    >
+                                        <div className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                                            {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                                        </div>
+                                        <div>
+                                            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Group {prefix}</h2>
+                                            <p className="text-sm text-slate-500">{groupTerritories.length} territories</p>
+                                        </div>
                                     </div>
-                                    <div className="flex flex-col items-end gap-1">
+                                    <div className="flex flex-col items-end gap-1" onClick={(e) => e.stopPropagation()}>
                                         <span className="text-xs font-medium text-slate-500 uppercase">Group Status</span>
                                         <Switch
                                             checked={isAllActive}
@@ -139,79 +156,81 @@ export default function AdminPage() {
                                     </div>
                                 </div>
 
-                                <div className="grid gap-4 pl-4 border-l-2 border-slate-200 dark:border-slate-800">
-                                    {groupTerritories.map((territory) => (
-                                        <Card key={territory.id} className="overflow-hidden">
-                                            <div className="flex flex-col sm:flex-row items-start sm:items-center p-4 sm:p-6 gap-4">
-                                                <div className="h-16 w-full sm:w-16 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200">
-                                                    <img
-                                                        src={territory.map_image_url}
-                                                        alt=""
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                </div>
-
-                                                <div className="flex-1 min-w-0 w-full">
-                                                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                                                        <h3 className="font-semibold text-lg truncate">{territory.territory_name}</h3>
-                                                        <Badge variant="secondary" className="text-xs">#{territory.id}</Badge>
-                                                        <Badge
-                                                            variant={territory.isAssigned ? "default" : "outline"}
-                                                            className={territory.isAssigned ? "bg-green-600 hover:bg-green-700" : "text-slate-500"}
-                                                        >
-                                                            {territory.isAssigned ? "Scanned" : "Unscanned"}
-                                                        </Badge>
-                                                    </div>
-                                                    <p className="text-sm text-slate-500 line-clamp-2 sm:line-clamp-none">{territory.map_description}</p>
-                                                </div>
-
-                                                <div className="flex items-center gap-4 w-full sm:w-auto justify-end mt-2 sm:mt-0">
-                                                    <Button
-                                                        variant={copiedId === territory.id ? "secondary" : "ghost"}
-                                                        size="sm"
-                                                        onClick={async () => {
-                                                            const url = `${window.location.origin}/view/${territory.id}`;
-
-                                                            // 1. Copy to clipboard
-                                                            navigator.clipboard.writeText(url).then(() => {
-                                                                setCopiedId(territory.id);
-                                                                setTimeout(() => setCopiedId(null), 2000);
-                                                            }).catch(() => {
-                                                                alert(`Could not copy to clipboard. URL: ${url}`);
-                                                            });
-
-                                                            // 2. Trigger Assignment (Mark as Scanned)
-                                                            try {
-                                                                const res = await fetch('/api/admin/assign', {
-                                                                    method: 'POST',
-                                                                    headers: { 'Content-Type': 'application/json' },
-                                                                    body: JSON.stringify({ id: territory.id }),
-                                                                });
-                                                                if (res.ok) {
-                                                                    // Refresh list to update badge
-                                                                    fetchTerritories();
-                                                                }
-                                                            } catch (e) {
-                                                                console.error("Failed to mark as assigned", e);
-                                                            }
-                                                        }}
-                                                        title="Copy Link"
-                                                        className="min-w-[70px]"
-                                                    >
-                                                        {copiedId === territory.id ? "Copied!" : "Share"}
-                                                    </Button>
-                                                    <div className="flex flex-col items-end gap-1">
-                                                        <span className="text-xs font-medium text-slate-500 uppercase">Status</span>
-                                                        <Switch
-                                                            checked={territory.active}
-                                                            onCheckedChange={() => toggleActive(territory.id)}
+                                {isExpanded && (
+                                    <div className="grid gap-4 pl-4 border-l-2 border-slate-200 dark:border-slate-800">
+                                        {groupTerritories.map((territory) => (
+                                            <Card key={territory.id} className="overflow-hidden">
+                                                <div className="flex flex-col sm:flex-row items-start sm:items-center p-4 sm:p-6 gap-4">
+                                                    <div className="h-16 w-full sm:w-16 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200">
+                                                        <img
+                                                            src={territory.map_image_url}
+                                                            alt=""
+                                                            className="w-full h-full object-cover"
                                                         />
                                                     </div>
+
+                                                    <div className="flex-1 min-w-0 w-full">
+                                                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                                                            <h3 className="font-semibold text-lg truncate">{territory.territory_name}</h3>
+                                                            <Badge variant="secondary" className="text-xs">#{territory.id}</Badge>
+                                                            <Badge
+                                                                variant={territory.isAssigned ? "default" : "outline"}
+                                                                className={territory.isAssigned ? "bg-green-600 hover:bg-green-700" : "text-slate-500"}
+                                                            >
+                                                                {territory.isAssigned ? "Scanned" : "Unscanned"}
+                                                            </Badge>
+                                                        </div>
+                                                        <p className="text-sm text-slate-500 line-clamp-2 sm:line-clamp-none">{territory.map_description}</p>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-4 w-full sm:w-auto justify-end mt-2 sm:mt-0">
+                                                        <Button
+                                                            variant={copiedId === territory.id ? "secondary" : "ghost"}
+                                                            size="sm"
+                                                            onClick={async () => {
+                                                                const url = `${window.location.origin}/view/${territory.id}`;
+
+                                                                // 1. Copy to clipboard
+                                                                navigator.clipboard.writeText(url).then(() => {
+                                                                    setCopiedId(territory.id);
+                                                                    setTimeout(() => setCopiedId(null), 2000);
+                                                                }).catch(() => {
+                                                                    alert(`Could not copy to clipboard. URL: ${url}`);
+                                                                });
+
+                                                                // 2. Trigger Assignment (Mark as Scanned)
+                                                                try {
+                                                                    const res = await fetch('/api/admin/assign', {
+                                                                        method: 'POST',
+                                                                        headers: { 'Content-Type': 'application/json' },
+                                                                        body: JSON.stringify({ id: territory.id }),
+                                                                    });
+                                                                    if (res.ok) {
+                                                                        // Refresh list to update badge
+                                                                        fetchTerritories();
+                                                                    }
+                                                                } catch (e) {
+                                                                    console.error("Failed to mark as assigned", e);
+                                                                }
+                                                            }}
+                                                            title="Copy Link"
+                                                            className="min-w-[70px]"
+                                                        >
+                                                            {copiedId === territory.id ? "Copied!" : "Share"}
+                                                        </Button>
+                                                        <div className="flex flex-col items-end gap-1">
+                                                            <span className="text-xs font-medium text-slate-500 uppercase">Status</span>
+                                                            <Switch
+                                                                checked={territory.active}
+                                                                onCheckedChange={() => toggleActive(territory.id)}
+                                                            />
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </Card>
-                                    ))}
-                                </div>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         );
                     })}
