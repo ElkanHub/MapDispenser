@@ -147,7 +147,7 @@
         "id": 19,
         "territory_name": "AT 8",
         "map_link": "https://maps.app.goo.gl/SBBAWTv2cigaoi4c6",
-        "map_image_url": "/maps/at8.png",
+        "map_image_url": "/maps/at8.jpg",
         "map_description": "Warehouses and factories.",
         "active": true
     },
@@ -155,7 +155,7 @@
         "id": 20,
         "territory_name": "AT 9",
         "map_link": "https://www.google.com/maps",
-        "map_image_url": "/maps/at9.png",
+        "map_image_url": "/maps/at9.jpg",
         "map_description": "Warehouses and factories.",
         "active": true
     },
@@ -163,7 +163,7 @@
         "id": 21,
         "territory_name": "AT 10",
         "map_link": "https://www.google.com/maps",
-        "map_image_url": "/maps/at10.png",
+        "map_image_url": "/maps/at10.jpg",
         "map_description": "Warehouses and factories.",
         "active": true
     }
