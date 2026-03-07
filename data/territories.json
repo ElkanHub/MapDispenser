@@ -90,7 +90,7 @@
     {
         "id": 12,
         "territory_name": "AT 1",
-        "map_link": "https://www.google.com/maps",
+        "map_link": "https://maps.app.goo.gl/9aa7Gsi7xUYqHtYn7",
         "map_image_url": "/maps/at1.png",
         "map_description": "Warehouses and factories.",
         "active": true
@@ -98,7 +98,7 @@
     {
         "id": 13,
         "territory_name": "AT 2",
-        "map_link": "https://www.google.com/maps",
+        "map_link": "https://maps.app.goo.gl/A1JpUNCv7okZpcWAA",
         "map_image_url": "/maps/at2.png",
         "map_description": "Warehouses and factories.",
         "active": true
@@ -106,7 +106,7 @@
     {
         "id": 14,
         "territory_name": "AT 3",
-        "map_link": "https://www.google.com/maps",
+        "map_link": "https://maps.app.goo.gl/88QFAtBQUK4R9vKPA",
         "map_image_url": "/maps/at3.png",
         "map_description": "Warehouses and factories.",
         "active": true
@@ -114,7 +114,7 @@
     {
         "id": 15,
         "territory_name": "AT 4",
-        "map_link": "https://www.google.com/maps",
+        "map_link": "https://maps.app.goo.gl/mBG3Ba123or5oqYn7",
         "map_image_url": "/maps/at4.png",
         "map_description": "Warehouses and factories.",
         "active": true
@@ -122,7 +122,7 @@
     {
         "id": 16,
         "territory_name": "AT 5",
-        "map_link": "https://www.google.com/maps",
+        "map_link": "https://maps.app.goo.gl/wauxM9pmTwBnsMAm9",
         "map_image_url": "/maps/at5.png",
         "map_description": "Warehouses and factories.",
         "active": true
@@ -130,7 +130,7 @@
     {
         "id": 17,
         "territory_name": "AT 6",
-        "map_link": "https://www.google.com/maps",
+        "map_link": "https://maps.app.goo.gl/2ssFK2s3yWnsx82J7",
         "map_image_url": "/maps/at6.png",
         "map_description": "Warehouses and factories.",
         "active": true
@@ -138,7 +138,7 @@
     {
         "id": 18,
         "territory_name": "AT 7",
-        "map_link": "https://www.google.com/maps",
+        "map_link": "https://maps.app.goo.gl/Lwr82xruA1dQgMwy7",
         "map_image_url": "/maps/at7.png",
         "map_description": "Warehouses and factories.",
         "active": true
@@ -146,7 +146,7 @@
     {
         "id": 19,
         "territory_name": "AT 8",
-        "map_link": "https://www.google.com/maps",
+        "map_link": "https://maps.app.goo.gl/SBBAWTv2cigaoi4c6",
         "map_image_url": "/maps/at8.png",
         "map_description": "Warehouses and factories.",
         "active": true
