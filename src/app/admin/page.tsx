@@ -143,7 +143,7 @@ export default function AdminPage() {
                                             {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
                                         </div>
                                         <div>
-                                            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Group {prefix}</h2>
+                                            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">{prefix} Group</h2>
                                             <p className="text-sm text-slate-500">{groupTerritories.length} territories</p>
                                         </div>
                                     </div>
@@ -160,8 +160,8 @@ export default function AdminPage() {
                                     <div className="grid gap-4 pl-4 border-l-2 border-slate-200 dark:border-slate-800">
                                         {groupTerritories.map((territory) => (
                                             <Card key={territory.id} className="overflow-hidden">
-                                                <div className="flex flex-col sm:flex-row items-start sm:items-center p-4 sm:p-6 gap-4">
-                                                    <div className="h-16 w-full sm:w-16 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200">
+                                                <div className="flex items-center p-6 gap-4">
+                                                    <div className="h-16 w-16 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200">
                                                         <img
                                                             src={territory.map_image_url}
                                                             alt=""
@@ -169,8 +169,8 @@ export default function AdminPage() {
                                                         />
                                                     </div>
 
-                                                    <div className="flex-1 min-w-0 w-full">
-                                                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-1">
                                                             <h3 className="font-semibold text-lg truncate">{territory.territory_name}</h3>
                                                             <Badge variant="secondary" className="text-xs">#{territory.id}</Badge>
                                                             <Badge
@@ -180,10 +180,10 @@ export default function AdminPage() {
                                                                 {territory.isAssigned ? "Scanned" : "Unscanned"}
                                                             </Badge>
                                                         </div>
-                                                        <p className="text-sm text-slate-500 line-clamp-2 sm:line-clamp-none">{territory.map_description}</p>
+                                                        <p className="text-sm text-slate-500 truncate">{territory.map_description}</p>
                                                     </div>
 
-                                                    <div className="flex items-center gap-4 w-full sm:w-auto justify-end mt-2 sm:mt-0">
+                                                    <div className="flex items-center gap-4">
                                                         <Button
                                                             variant={copiedId === territory.id ? "secondary" : "ghost"}
                                                             size="sm"
