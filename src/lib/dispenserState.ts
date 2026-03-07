@@ -12,6 +12,11 @@ export interface Territory {
     isAssigned?: boolean;
 }
 
+export interface SystemUpdate {
+    title: string;
+    message: string;
+}
+
 export interface Assignment {
     territoryId: number;
     assignedAt: string;
@@ -21,7 +26,7 @@ export interface Assignment {
 // NOTE: This resets on server restart. For persistent storage, use a database.
 let assignedTerritoryIds: Set<number> = new Set();
 let assignments: Assignment[] = [];
-let territoriesCache: Territory[] | null = null;
+let territoriesCache: any[] | null = null;
 let isInitialized = false;
 
 // Initialize data from JSON file
@@ -43,11 +48,21 @@ function initializeData() {
 // Get all territories, optionally filtering by active status
 export function getTerritories(): Territory[] {
     if (!isInitialized) initializeData();
-    const territories = territoriesCache || [];
+    const territories = (territoriesCache || []).filter(t => t.territory_name) as Territory[];
     return territories.map(t => ({
         ...t,
         isAssigned: assignedTerritoryIds.has(t.id)
     }));
+}
+
+// Get system update banner if any is present
+export function getSystemUpdate(): SystemUpdate | null {
+    if (!isInitialized) initializeData();
+    const update = (territoriesCache || []).find((t: any) => t.title && t.message);
+    if (update) {
+        return { title: update.title, message: update.message };
+    }
+    return null;
 }
 
 // Get dispenser stats

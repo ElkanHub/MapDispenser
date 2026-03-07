@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, RefreshCw, HomeIcon, ChevronDown, ChevronRight } from 'lucide-react';
+import { Loader2, RefreshCw, HomeIcon, ChevronDown, ChevronRight, Info, X } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from 'next/link';
 
 export default function AdminPage() {
@@ -15,6 +16,22 @@ export default function AdminPage() {
     const [copiedId, setCopiedId] = useState<number | null>(null);
     const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
     const [previewTerritory, setPreviewTerritory] = useState<Territory | null>(null);
+    const [systemUpdate, setSystemUpdate] = useState<{ title: string, message: string } | null>(null);
+    const [isUpdateDismissed, setIsUpdateDismissed] = useState(false);
+
+    const fetchSystemUpdate = async () => {
+        try {
+            const res = await fetch('/api/system-update');
+            if (res.ok) {
+                const data = await res.json();
+                if (!data.no_update) {
+                    setSystemUpdate(data);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to fetch system update banner', error);
+        }
+    };
 
     const toggleGroupExpanded = (prefix: string) => {
         setExpandedGroups(prev => ({
@@ -39,6 +56,7 @@ export default function AdminPage() {
 
     useEffect(() => {
         fetchTerritories();
+        fetchSystemUpdate();
     }, []);
 
     const toggleActive = async (id: number) => {
@@ -122,11 +140,29 @@ export default function AdminPage() {
                         >
                             Reset System
                         </Button>
-                        <Button onClick={fetchTerritories} variant="outline" size="icon">
+                        <Button onClick={() => { fetchTerritories(); fetchSystemUpdate(); }} variant="outline" size="icon">
                             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                         </Button>
                     </div>
                 </div>
+
+                {systemUpdate && !isUpdateDismissed && (
+                    <Alert className="bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-900 shadow-sm relative pr-10">
+                        <Info className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                        <AlertTitle className="text-blue-800 dark:text-blue-300 font-semibold">{systemUpdate.title}</AlertTitle>
+                        <AlertDescription className="text-blue-700 dark:text-blue-400 mt-1">
+                            {systemUpdate.message}
+                        </AlertDescription>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-2 right-2 h-8 w-8 text-blue-600 hover:text-blue-800 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-900 rounded-full"
+                            onClick={() => setIsUpdateDismissed(true)}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </Alert>
+                )}
 
                 <div className="space-y-8">
                     {Object.entries(groupedTerritories).map(([prefix, groupTerritories]) => {
