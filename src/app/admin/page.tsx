@@ -310,6 +310,11 @@ export default function AdminPage() {
                             </div>
                             <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
                                 {previewTerritory.map_description}
+                                <br />
+                                <br />
+                                <a href={previewTerritory.map_link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                    View on Google Maps
+                                </a>
                             </p>
                         </div>
                     </div>

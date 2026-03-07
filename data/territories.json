@@ -1,5 +1,9 @@
 [
     {
+        "title": "Territory Grouping and Preview",
+        "message": "This is a new feature that groups territories together. This allows you to easily identify and assign territories from the list of territories. You can also now preview the territories on the list before assigning them by clicking on the image. We hope you enjoy this new feature."
+    },
+    {
         "id": 1,
         "territory_name": "KHT 1",
         "map_link": "https://maps.app.goo.gl/VJEx7y6rwALr6qYB6",
