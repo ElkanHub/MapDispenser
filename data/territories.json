@@ -170,5 +170,109 @@
         "map_image_url": "/maps/at10.jpg",
         "map_description": ".",
         "active": true
+    },
+    {
+        "id": 22,
+        "territory_name": "WT 1",
+        "map_link": "https://maps.app.goo.gl/6K4tzo9uQ2MojRUc7",
+        "map_image_url": "/maps/wt1.jpg",
+        "map_description": ".",
+        "active": true
+    },
+    {
+        "id": 23,
+        "territory_name": "WT 2",
+        "map_link": "https://maps.app.goo.gl/XGT9C6J7z2M3ScrY9",
+        "map_image_url": "/maps/wt2.jpg",
+        "map_description": ".",
+        "active": true
+    },
+    {
+        "id": 24,
+        "territory_name": "WT 3",
+        "map_link": "https://maps.app.goo.gl/E2S6xFPp7jtb84bd6",
+        "map_image_url": "/maps/wt3.jpg",
+        "map_description": ".",
+        "active": true
+    },
+    {
+        "id": 25,
+        "territory_name": "WT 4",
+        "map_link": "https://maps.app.goo.gl/Njf1VaHJ6HVqQEw47",
+        "map_image_url": "/maps/wt4.jpg",
+        "map_description": ".",
+        "active": true
+    },
+    {
+        "id": 26,
+        "territory_name": "WT 5",
+        "map_link": "https://maps.app.goo.gl/MYZEwcuB6oYi6mm79",
+        "map_image_url": "/maps/wt5.jpg",
+        "map_description": ".",
+        "active": true
+    },
+    {
+        "id": 27,
+        "territory_name": "WT 6",
+        "map_link": "https://maps.app.goo.gl/v1AZ9F3ssKkYL1hQ7",
+        "map_image_url": "/maps/wt6.jpg",
+        "map_description": ".",
+        "active": true
+    },
+    {
+        "id": 28,
+        "territory_name": "WT 7",
+        "map_link": "https://maps.app.goo.gl/WC5U2gcKgiYkgd746",
+        "map_image_url": "/maps/wt7.jpg",
+        "map_description": ".",
+        "active": true
+    },
+    {
+        "id": 29,
+        "territory_name": "WT 8",
+        "map_link": "https://maps.app.goo.gl/ecd1pVhqUouzbBQo8",
+        "map_image_url": "/maps/wt8.jpg",
+        "map_description": ".",
+        "active": true
+    },
+    {
+        "id": 30,
+        "territory_name": "WT 9",
+        "map_link": "https://maps.app.goo.gl/nibuPqBMJFHT1PYJ9",
+        "map_image_url": "/maps/wt9.jpg",
+        "map_description": ".",
+        "active": true
+    },
+    {
+        "id": 31,
+        "territory_name": "WT 10",
+        "map_link": "https://maps.app.goo.gl/nibuPqBMJFHT1PYJ9",
+        "map_image_url": "/maps/wt10.jpg",
+        "map_description": ".",
+        "active": true
+    },
+    {
+        "id": 32,
+        "territory_name": "WT 11",
+        "map_link": "https://maps.app.goo.gl/EHpaPNj6DLVi12eH6",
+        "map_image_url": "/maps/wt11.jpg",
+        "map_description": ".",
+        "active": true
+    },
+    {
+        "id": 33,
+        "territory_name": "WT 12",
+        "map_link": "https://maps.app.goo.gl/sHumiYCEMBD9cEj66",
+        "map_image_url": "/maps/wt12.jpg",
+        "map_description": ".",
+        "active": true
+    },
+    {
+        "id": 34,
+        "territory_name": "WT 13",
+        "map_link": "https://maps.app.goo.gl/x1TPPbTZ4L9KQecE6",
+        "map_image_url": "/maps/wt13.jpg",
+        "map_description": ".",
+        "active": true
     }
 ]
