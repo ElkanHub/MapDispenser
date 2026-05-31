@@ -11,7 +11,7 @@ export default async function ViewTerritoryPage({ params }: { params: Promise<{ 
         return notFound();
     }
 
-    const territory = getTerritoryById(id);
+    const territory = await getTerritoryById(id);
 
     if (!territory) {
         return notFound();

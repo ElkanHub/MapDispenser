@@ -2,6 +2,6 @@ import { NextResponse } from 'next/server';
 import { getStats } from '@/lib/dispenserState';
 
 export async function GET() {
-    const stats = getStats();
+    const stats = await getStats();
     return NextResponse.json(stats);
 }

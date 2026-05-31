@@ -27,7 +27,7 @@ export default function ClaimPage() {
                         setError(data.error || 'Failed to assign territory');
                     }
                 }
-            } catch (err) {
+            } catch {
                 setError('Network error occurred');
             }
         };

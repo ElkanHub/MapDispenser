@@ -1,0 +1,28 @@
+import { NextResponse } from 'next/server';
+import { getDataBackend, setDataBackend, type DataBackend } from '@/lib/dispenserState';
+
+export async function GET() {
+    return NextResponse.json({ backend: getDataBackend() });
+}
+
+export async function POST(request: Request) {
+    try {
+        const body = await request.json();
+        const backend = body.backend as DataBackend;
+
+        if (backend !== 'local' && backend !== 'supabase') {
+            return NextResponse.json(
+                { error: 'Backend must be "local" or "supabase".' },
+                { status: 400 }
+            );
+        }
+
+        setDataBackend(backend);
+        return NextResponse.json({ success: true, backend });
+    } catch {
+        return NextResponse.json(
+            { error: 'Invalid request body' },
+            { status: 400 }
+        );
+    }
+}

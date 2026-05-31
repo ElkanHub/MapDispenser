@@ -5,14 +5,18 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { MapPin, Users, CheckCircle, AlertCircle } from 'lucide-react';
+import { Users, AlertCircle, Database, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
 interface Stats {
   total: number;
+  active: number;
+  inactive: number;
   assigned: number;
   remaining: number;
+  totalAssignments: number;
+  backend: 'local' | 'supabase';
   isExhausted: boolean;
 }
 
@@ -20,9 +24,9 @@ export default function DispenserPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [origin, setOrigin] = useState('');
 
-  // Get current origin for QR code link
   useEffect(() => {
-    setOrigin(window.location.origin);
+    const id = window.setTimeout(() => setOrigin(window.location.origin), 0);
+    return () => window.clearTimeout(id);
   }, []);
 
   // Poll for stats every 2 seconds
@@ -57,7 +61,7 @@ export default function DispenserPage() {
     );
   }
 
-  const percentAssigned = stats.total > 0 ? (stats.assigned / stats.total) * 100 : 0;
+  const percentAssigned = stats.active > 0 ? (stats.assigned / stats.active) * 100 : 0;
 
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6 flex flex-col items-center justify-center md:flex-row md:gap-12 gap-8">
@@ -104,17 +108,17 @@ export default function DispenserPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-indigo-600" />
+              <Users className="h-5 w-5 text-blue-700" />
               Distribution Status
             </CardTitle>
-            <Link href="https://map-dispenser.vercel.app/admin"><Button variant="outline" >See all Territories</Button></Link>
+            <Link href="/admin"><Button variant="outline">Open Dashboard</Button></Link>
           </CardHeader>
           <CardContent className="space-y-6">
 
             <div className="space-y-2">
               <div className="flex justify-between text-sm font-medium">
                 <span className="text-slate-500">Progress</span>
-                <span className="text-indigo-600">{Math.round(percentAssigned)}%</span>
+                <span className="text-blue-700">{Math.round(percentAssigned)}%</span>
               </div>
               <Progress value={percentAssigned} className="h-3" />
             </div>
@@ -124,9 +128,22 @@ export default function DispenserPage() {
                 <span className="text-3xl font-bold text-slate-900">{stats.assigned}</span>
                 <span className="text-xs font-semibold text-slate-500 uppercase mt-1">Assigned</span>
               </div>
-              <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-100 flex flex-col items-center">
-                <span className="text-3xl font-bold text-indigo-600">{stats.remaining}</span>
-                <span className="text-xs font-semibold text-indigo-500 uppercase mt-1">Remaining</span>
+              <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 flex flex-col items-center">
+                <span className="text-3xl font-bold text-blue-700">{stats.remaining}</span>
+                <span className="text-xs font-semibold text-blue-600 uppercase mt-1">Remaining</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 bg-violet-50 rounded-lg border border-violet-100 flex flex-col items-center">
+                <RotateCcw className="h-5 w-5 text-violet-700 mb-1" />
+                <span className="text-2xl font-bold text-violet-700">{stats.totalAssignments}</span>
+                <span className="text-xs font-semibold text-violet-600 uppercase mt-1">Total Runs</span>
+              </div>
+              <div className="p-4 bg-zinc-50 rounded-lg border border-zinc-100 flex flex-col items-center">
+                <Database className="h-5 w-5 text-zinc-700 mb-1" />
+                <span className="text-lg font-bold text-zinc-900 capitalize">{stats.backend}</span>
+                <span className="text-xs font-semibold text-zinc-500 uppercase mt-1">Database</span>
               </div>
             </div>
 

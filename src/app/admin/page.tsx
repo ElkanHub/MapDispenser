@@ -1,162 +1,241 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Territory } from '@/lib/dispenserState';
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { Territory, type DataBackend, type DashboardStats } from '@/lib/dispenserState';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, RefreshCw, HomeIcon, ChevronDown, ChevronRight, Info, X } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import Link from 'next/link';
+import {
+    BarChart3,
+    ChevronDown,
+    ChevronRight,
+    Copy,
+    Database,
+    HomeIcon,
+    Info,
+    Loader2,
+    MapPinned,
+    RefreshCw,
+    Upload,
+    X
+} from 'lucide-react';
+
+type UploadState = 'idle' | 'uploading' | 'success' | 'error';
 
 export default function AdminPage() {
     const [territories, setTerritories] = useState<Territory[]>([]);
+    const [stats, setStats] = useState<DashboardStats | null>(null);
+    const [backend, setBackend] = useState<DataBackend>('local');
     const [loading, setLoading] = useState(true);
     const [copiedId, setCopiedId] = useState<number | null>(null);
     const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
     const [previewTerritory, setPreviewTerritory] = useState<Territory | null>(null);
     const [systemUpdate, setSystemUpdate] = useState<{ title: string, message: string } | null>(null);
     const [isUpdateDismissed, setIsUpdateDismissed] = useState(false);
+    const [uploadText, setUploadText] = useState('');
+    const [uploadState, setUploadState] = useState<UploadState>('idle');
+    const [uploadMessage, setUploadMessage] = useState('');
 
     const fetchSystemUpdate = async () => {
         try {
             const res = await fetch('/api/system-update');
             if (res.ok) {
                 const data = await res.json();
-                if (!data.no_update) {
-                    setSystemUpdate(data);
-                }
+                setSystemUpdate(data.no_update ? null : data);
             }
         } catch (error) {
             console.error('Failed to fetch system update banner', error);
         }
     };
 
-    const toggleGroupExpanded = (prefix: string) => {
-        setExpandedGroups(prev => ({
-            ...prev,
-            [prefix]: prev[prefix] === undefined ? false : !prev[prefix]
-        }));
-    };
-
-    const fetchTerritories = async () => {
+    const fetchDashboard = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/territories');
-            if (res.ok) {
-                setTerritories(await res.json());
+            const [territoriesRes, statsRes, databaseRes] = await Promise.all([
+                fetch('/api/territories'),
+                fetch('/api/stats'),
+                fetch('/api/admin/database'),
+            ]);
+
+            if (territoriesRes.ok) setTerritories(await territoriesRes.json());
+            if (statsRes.ok) setStats(await statsRes.json());
+            if (databaseRes.ok) {
+                const data = await databaseRes.json();
+                setBackend(data.backend);
             }
         } catch (error) {
-            console.error('Failed to fetch territories', error);
+            console.error('Failed to fetch dashboard data', error);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchTerritories();
+        fetchDashboard();
         fetchSystemUpdate();
     }, []);
 
-    const toggleActive = async (id: number) => {
-        try {
-            // Optimistic update
-            setTerritories(prev => prev.map(t =>
-                t.id === id ? { ...t, active: !t.active } : t
-            ));
+    const groupedTerritories = useMemo(() => {
+        const getPrefix = (name: string) => name.replace(/[\d\s]+$/, '') || 'Other';
 
-            const res = await fetch('/api/territories', {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ id }),
-            });
+        return territories.reduce((acc, territory) => {
+            const prefix = getPrefix(territory.territory_name);
+            if (!acc[prefix]) acc[prefix] = [];
+            acc[prefix].push(territory);
+            return acc;
+        }, {} as Record<string, Territory[]>);
+    }, [territories]);
 
-            if (!res.ok) {
-                // Revert on failure
-                fetchTerritories();
-            }
-        } catch (error) {
-            fetchTerritories();
+    const setDatabaseBackend = async (nextBackend: DataBackend) => {
+        setBackend(nextBackend);
+        const res = await fetch('/api/admin/database', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ backend: nextBackend }),
+        });
+
+        if (!res.ok) {
+            setBackend(backend);
+            const data = await res.json().catch(() => ({}));
+            setUploadState('error');
+            setUploadMessage(data.error || 'Could not switch database backend.');
+            return;
         }
+
+        await fetchDashboard();
+    };
+
+    const toggleActive = async (id: number) => {
+        setTerritories((prev) => prev.map((territory) =>
+            territory.id === id ? { ...territory, active: !territory.active } : territory
+        ));
+
+        const res = await fetch('/api/territories', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id }),
+        });
+
+        if (!res.ok) fetchDashboard();
+        else fetchDashboard();
     };
 
     const toggleGroupActive = async (prefix: string, active: boolean) => {
-        const groupIds = groupedTerritories[prefix].map(t => t.id);
+        const groupIds = groupedTerritories[prefix].map((territory) => territory.id);
+        setTerritories((prev) => prev.map((territory) =>
+            groupIds.includes(territory.id) ? { ...territory, active } : territory
+        ));
+
+        const res = await fetch('/api/territories', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids: groupIds, active }),
+        });
+
+        if (!res.ok) fetchDashboard();
+        else fetchDashboard();
+    };
+
+    const markAssignedAndShare = async (territory: Territory) => {
+        const url = `${window.location.origin}/view/${territory.id}`;
+        try {
+            await navigator.clipboard.writeText(url);
+            setCopiedId(territory.id);
+            setTimeout(() => setCopiedId(null), 2000);
+        } catch {
+            alert(`Could not copy to clipboard. URL: ${url}`);
+        }
+
+        const res = await fetch('/api/admin/assign', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: territory.id }),
+        });
+        if (res.ok) fetchDashboard();
+    };
+
+    const handleUploadFile = async (file: File | undefined) => {
+        if (!file) return;
+        setUploadText(await file.text());
+    };
+
+    const uploadTerritories = async () => {
+        setUploadState('uploading');
+        setUploadMessage('');
 
         try {
-            // Optimistic update
-            setTerritories(prev => prev.map(t =>
-                groupIds.includes(t.id) ? { ...t, active } : t
-            ));
-
+            const parsed = JSON.parse(uploadText);
             const res = await fetch('/api/territories', {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ ids: groupIds, active }),
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(parsed),
             });
+            const data = await res.json();
 
             if (!res.ok) {
-                fetchTerritories();
+                throw new Error(data.error || 'Upload failed.');
             }
+
+            setUploadState('success');
+            setUploadMessage(`Uploaded ${data.count} territories into ${backend}.`);
+            setUploadText('');
+            await fetchDashboard();
         } catch (error) {
-            fetchTerritories();
+            setUploadState('error');
+            setUploadMessage(error instanceof Error ? error.message : 'Invalid JSON upload.');
         }
     };
 
-    const getPrefix = (name: string) => name.replace(/[\d\s]+$/, '');
-
-    const groupedTerritories = territories.reduce((acc, territory) => {
-        const prefix = getPrefix(territory.territory_name) || 'Other';
-        if (!acc[prefix]) {
-            acc[prefix] = [];
-        }
-        acc[prefix].push(territory);
-        return acc;
-    }, {} as Record<string, Territory[]>);
+    const statCards = [
+        { label: 'Total', value: stats?.total ?? 0, tone: 'text-slate-900' },
+        { label: 'Available', value: stats?.remaining ?? 0, tone: 'text-emerald-700' },
+        { label: 'Assigned', value: stats?.assigned ?? 0, tone: 'text-blue-700' },
+        { label: 'Assignment Events', value: stats?.totalAssignments ?? 0, tone: 'text-violet-700' },
+    ];
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6">
-            <div className="max-w-4xl mx-auto space-y-6">
-                <div className="flex items-center justify-between">
+        <div className="min-h-screen bg-zinc-50 text-zinc-950 p-4 sm:p-6">
+            <div className="mx-auto max-w-7xl space-y-6">
+                <header className="flex flex-col gap-4 border-b border-zinc-200 pb-5 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold text-slate-900 icon-text-gap">Territory Admin</h1>
-                        <p className="text-slate-500">Manage availability and view status</p>
+                        <div className="flex items-center gap-2 text-sm font-medium text-zinc-500">
+                            <BarChart3 className="h-4 w-4" />
+                            Live territory operations
+                        </div>
+                        <h1 className="mt-2 text-3xl font-bold tracking-tight">Territory Dashboard</h1>
+                        <p className="mt-1 text-sm text-zinc-500">Track assignment history, manage availability, and upload territory records.</p>
                     </div>
-                    <div className="flex gap-2">
-                        <Link href="https://map-dispenser.vercel.app/"><Button> <HomeIcon />Back</Button></Link>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Link href="/"><Button variant="outline"><HomeIcon />Home</Button></Link>
                         <Button
                             onClick={async () => {
-                                if (confirm("Are you sure you want to RESET the entire system? This will clear all assignments.")) {
+                                if (confirm('Reset all assignment history for the active database?')) {
                                     await fetch('/api/admin/reset', { method: 'POST' });
-                                    fetchTerritories();
+                                    fetchDashboard();
                                 }
                             }}
                             variant="destructive"
                         >
-                            Reset System
+                            Reset Assignments
                         </Button>
-                        <Button onClick={() => { fetchTerritories(); fetchSystemUpdate(); }} variant="outline" size="icon">
+                        <Button onClick={() => { fetchDashboard(); fetchSystemUpdate(); }} variant="outline" size="icon">
                             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                         </Button>
                     </div>
-                </div>
+                </header>
 
                 {systemUpdate && !isUpdateDismissed && (
-                    <Alert className="bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-900 shadow-sm relative pr-10">
-                        <Info className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                        <AlertTitle className="text-blue-800 dark:text-blue-300 font-semibold">{systemUpdate.title}</AlertTitle>
-                        <AlertDescription className="text-blue-700 dark:text-blue-400 mt-1">
-                            {systemUpdate.message}
-                        </AlertDescription>
+                    <Alert className="relative border-blue-200 bg-blue-50 pr-10">
+                        <Info className="h-5 w-5 text-blue-600" />
+                        <AlertTitle className="text-blue-900">{systemUpdate.title}</AlertTitle>
+                        <AlertDescription className="text-blue-800">{systemUpdate.message}</AlertDescription>
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="absolute top-2 right-2 h-8 w-8 text-blue-600 hover:text-blue-800 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-900 rounded-full"
+                            className="absolute right-2 top-2 h-8 w-8 text-blue-700"
                             onClick={() => setIsUpdateDismissed(true)}
                         >
                             <X className="h-4 w-4" />
@@ -164,109 +243,153 @@ export default function AdminPage() {
                     </Alert>
                 )}
 
-                <div className="space-y-8">
+                <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    {statCards.map((card) => (
+                        <Card key={card.label}>
+                            <CardContent className="p-5">
+                                <p className="text-sm font-medium text-zinc-500">{card.label}</p>
+                                <p className={`mt-2 text-3xl font-bold ${card.tone}`}>{card.value}</p>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </section>
+
+                <section className="grid gap-4 lg:grid-cols-[1fr_1.25fr]">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><Database className="h-5 w-5" />Database Source</CardTitle>
+                            <CardDescription>Switch between the current local JSON store and Supabase.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="flex items-center justify-between rounded-md border border-zinc-200 p-4">
+                                <div>
+                                    <p className="font-medium">Supabase mode</p>
+                                    <p className="text-sm text-zinc-500">Current: {backend}</p>
+                                </div>
+                                <Switch
+                                    checked={backend === 'supabase'}
+                                    onCheckedChange={(checked) => setDatabaseBackend(checked ? 'supabase' : 'local')}
+                                />
+                            </div>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                                <div className="rounded-md border border-zinc-200 p-4">
+                                    <p className="text-sm text-zinc-500">Most assigned</p>
+                                    <p className="mt-1 font-semibold">{stats?.mostAssigned?.territory_name || 'None yet'}</p>
+                                    <p className="text-sm text-zinc-500">{stats?.mostAssigned?.assignmentCount || 0} assignments</p>
+                                </div>
+                                <div className="rounded-md border border-zinc-200 p-4">
+                                    <p className="text-sm text-zinc-500">Inactive</p>
+                                    <p className="mt-1 text-2xl font-bold">{stats?.inactive || 0}</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><Upload className="h-5 w-5" />Upload Territories</CardTitle>
+                            <CardDescription>Upload a JSON array with id, territory_name, map_link, map_image_url, map_description, and active.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            <input
+                                type="file"
+                                accept="application/json,.json"
+                                onChange={(event) => handleUploadFile(event.target.files?.[0])}
+                                className="block w-full text-sm file:mr-4 file:rounded-md file:border-0 file:bg-zinc-900 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white"
+                            />
+                            <textarea
+                                value={uploadText}
+                                onChange={(event) => setUploadText(event.target.value)}
+                                placeholder='[{"id":1,"territory_name":"KHT 1","map_link":"https://...","map_image_url":"/maps/kht1.png","map_description":"...","active":true}]'
+                                className="min-h-28 w-full rounded-md border border-zinc-200 bg-white p-3 font-mono text-xs outline-none focus:ring-2 focus:ring-zinc-300"
+                            />
+                            <div className="flex items-center justify-between gap-3">
+                                <p className={`text-sm ${uploadState === 'error' ? 'text-red-600' : 'text-zinc-500'}`}>{uploadMessage || `Target database: ${backend}`}</p>
+                                <Button onClick={uploadTerritories} disabled={!uploadText || uploadState === 'uploading'}>
+                                    {uploadState === 'uploading' ? <Loader2 className="animate-spin" /> : <Upload />}
+                                    Upload
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </section>
+
+                <section className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-semibold">Territories</h2>
+                        <Badge variant="outline">{territories.length} records</Badge>
+                    </div>
+
                     {Object.entries(groupedTerritories).map(([prefix, groupTerritories]) => {
-                        const isAllActive = groupTerritories.every(t => t.active);
+                        const isAllActive = groupTerritories.every((territory) => territory.active);
                         const isExpanded = expandedGroups[prefix] !== false;
 
                         return (
-                            <div key={prefix} className="space-y-4">
-                                <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800">
-                                    <div
-                                        className="flex items-center gap-3 cursor-pointer select-none"
-                                        onClick={() => toggleGroupExpanded(prefix)}
+                            <div key={prefix} className="space-y-3">
+                                <div className="flex items-center justify-between rounded-md border border-zinc-200 bg-white p-4">
+                                    <button
+                                        className="flex min-w-0 items-center gap-3 text-left"
+                                        onClick={() => setExpandedGroups((prev) => ({ ...prev, [prefix]: prev[prefix] === undefined ? false : !prev[prefix] }))}
                                     >
-                                        <div className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
-                                            {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
-                                        </div>
-                                        <div>
-                                            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">{prefix} Group</h2>
-                                            <p className="text-sm text-slate-500">{groupTerritories.length} territories</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-col items-end gap-1" onClick={(e) => e.stopPropagation()}>
-                                        <span className="text-xs font-medium text-slate-500 uppercase">Group Status</span>
-                                        <Switch
-                                            checked={isAllActive}
-                                            onCheckedChange={(checked) => toggleGroupActive(prefix, checked)}
-                                        />
+                                        {isExpanded ? <ChevronDown className="h-5 w-5 text-zinc-500" /> : <ChevronRight className="h-5 w-5 text-zinc-500" />}
+                                        <span>
+                                            <span className="block font-semibold">{prefix} Group</span>
+                                            <span className="block text-sm text-zinc-500">{groupTerritories.length} territories</span>
+                                        </span>
+                                    </button>
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-xs font-medium uppercase text-zinc-500">Group active</span>
+                                        <Switch checked={isAllActive} onCheckedChange={(checked) => toggleGroupActive(prefix, checked)} />
                                     </div>
                                 </div>
 
                                 {isExpanded && (
-                                    <div className="grid gap-4 pl-4 border-l-2 border-slate-200 dark:border-slate-800">
+                                    <div className="grid gap-3 md:grid-cols-2">
                                         {groupTerritories.map((territory) => (
-                                            <Card key={territory.id} className="overflow-hidden">
-                                                <div className="flex items-center p-6 gap-4">
-                                                    <div
-                                                        className="h-16 w-16 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200 cursor-pointer hover:opacity-80 transition-opacity"
+                                            <Card key={territory.id}>
+                                                <CardContent className="flex gap-4 p-4">
+                                                    <button
+                                                        className="h-20 w-20 shrink-0 overflow-hidden rounded-md border border-zinc-200 bg-zinc-100"
                                                         onClick={() => setPreviewTerritory(territory)}
                                                     >
-                                                        <img
-                                                            src={territory.map_image_url}
-                                                            alt=""
-                                                            className="w-full h-full object-cover"
-                                                        />
-                                                    </div>
+                                                        <img src={territory.map_image_url} alt="" className="h-full w-full object-cover" />
+                                                    </button>
 
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <h3 className="font-semibold text-lg truncate">{territory.territory_name}</h3>
-                                                            <Badge variant="secondary" className="text-xs">#{territory.id}</Badge>
-                                                            <Badge
-                                                                variant={territory.isAssigned ? "default" : "outline"}
-                                                                className={territory.isAssigned ? "bg-green-600 hover:bg-green-700" : "text-slate-500"}
-                                                            >
-                                                                {territory.isAssigned ? "Scanned" : "Unscanned"}
-                                                            </Badge>
+                                                    <div className="min-w-0 flex-1 space-y-3">
+                                                        <div className="min-w-0">
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                <h3 className="truncate font-semibold">{territory.territory_name}</h3>
+                                                                <Badge variant="secondary">#{territory.id}</Badge>
+                                                                <Badge variant={territory.status === 'assigned' ? 'default' : territory.status === 'inactive' ? 'destructive' : 'outline'}>
+                                                                    {territory.status}
+                                                                </Badge>
+                                                            </div>
+                                                            <p className="mt-1 line-clamp-2 text-sm text-zinc-500">{territory.map_description}</p>
                                                         </div>
-                                                        <p className="text-sm text-slate-500 truncate">{territory.map_description}</p>
-                                                    </div>
 
-                                                    <div className="flex items-center gap-4">
-                                                        <Button
-                                                            variant={copiedId === territory.id ? "secondary" : "ghost"}
-                                                            size="sm"
-                                                            onClick={async () => {
-                                                                const url = `${window.location.origin}/view/${territory.id}`;
+                                                        <div className="grid gap-2 text-sm sm:grid-cols-3">
+                                                            <span><strong>{territory.assignmentCount || 0}</strong> assignments</span>
+                                                            <span className="truncate sm:col-span-2">{territory.lastAssignedAt ? new Date(territory.lastAssignedAt).toLocaleString() : 'Never assigned'}</span>
+                                                        </div>
 
-                                                                // 1. Copy to clipboard
-                                                                navigator.clipboard.writeText(url).then(() => {
-                                                                    setCopiedId(territory.id);
-                                                                    setTimeout(() => setCopiedId(null), 2000);
-                                                                }).catch(() => {
-                                                                    alert(`Could not copy to clipboard. URL: ${url}`);
-                                                                });
-
-                                                                // 2. Trigger Assignment (Mark as Scanned)
-                                                                try {
-                                                                    const res = await fetch('/api/admin/assign', {
-                                                                        method: 'POST',
-                                                                        headers: { 'Content-Type': 'application/json' },
-                                                                        body: JSON.stringify({ id: territory.id }),
-                                                                    });
-                                                                    if (res.ok) {
-                                                                        // Refresh list to update badge
-                                                                        fetchTerritories();
-                                                                    }
-                                                                } catch (e) {
-                                                                    console.error("Failed to mark as assigned", e);
-                                                                }
-                                                            }}
-                                                            title="Copy Link"
-                                                            className="min-w-[70px]"
-                                                        >
-                                                            {copiedId === territory.id ? "Copied!" : "Share"}
-                                                        </Button>
-                                                        <div className="flex flex-col items-end gap-1">
-                                                            <span className="text-xs font-medium text-slate-500 uppercase">Status</span>
-                                                            <Switch
-                                                                checked={territory.active}
-                                                                onCheckedChange={() => toggleActive(territory.id)}
-                                                            />
+                                                        <div className="flex flex-wrap items-center justify-between gap-3">
+                                                            <div className="flex gap-2">
+                                                                <Button variant="outline" size="sm" onClick={() => markAssignedAndShare(territory)}>
+                                                                    <Copy />
+                                                                    {copiedId === territory.id ? 'Copied' : 'Share'}
+                                                                </Button>
+                                                                <Button variant="ghost" size="sm" onClick={() => setPreviewTerritory(territory)}>
+                                                                    <MapPinned />
+                                                                    Preview
+                                                                </Button>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-xs font-medium uppercase text-zinc-500">Active</span>
+                                                                <Switch checked={territory.active} onCheckedChange={() => toggleActive(territory.id)} />
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
+                                                </CardContent>
                                             </Card>
                                         ))}
                                     </div>
@@ -274,48 +397,34 @@ export default function AdminPage() {
                             </div>
                         );
                     })}
-                </div>
+                </section>
             </div>
 
-            {/* Preview Modal */}
             {previewTerritory && (
                 <div
-                    className="fixed inset-0 bg-black/60 z-50 flex flex-col items-center justify-center p-6"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
                     onClick={() => setPreviewTerritory(null)}
                 >
                     <div
-                        className="bg-white dark:bg-slate-900 rounded-xl max-w-2xl w-full p-1 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
-                        onClick={(e) => e.stopPropagation()}
+                        className="max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-lg bg-white shadow-2xl"
+                        onClick={(event) => event.stopPropagation()}
                     >
-                        <div className="relative bg-slate-100 dark:bg-slate-800 rounded-t-lg overflow-hidden flex-shrink-0 min-h-[40vh]">
-                            <img
-                                src={previewTerritory.map_image_url}
-                                alt={previewTerritory.territory_name}
-                                className="w-full h-full object-contain absolute inset-0"
-                            />
-                            <Button
-                                variant="destructive"
-                                size="sm"
-                                className="absolute top-4 right-4 h-8 w-8 rounded-full p-0"
-                                onClick={() => setPreviewTerritory(null)}
-                            >
-                                <span className="sr-only">Close</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                        <div className="relative h-[48vh] bg-zinc-100">
+                            <img src={previewTerritory.map_image_url} alt={previewTerritory.territory_name} className="h-full w-full object-contain" />
+                            <Button className="absolute right-4 top-4" variant="destructive" size="icon" onClick={() => setPreviewTerritory(null)}>
+                                <X className="h-4 w-4" />
                             </Button>
                         </div>
-                        <div className="p-6 overflow-y-auto">
-                            <div className="flex items-center gap-3 mb-3">
-                                <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{previewTerritory.territory_name}</h3>
+                        <div className="space-y-3 p-5">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="text-2xl font-bold">{previewTerritory.territory_name}</h3>
                                 <Badge variant="secondary">#{previewTerritory.id}</Badge>
+                                <Badge variant="outline">{previewTerritory.assignmentCount || 0} assignments</Badge>
                             </div>
-                            <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
-                                {previewTerritory.map_description}
-                                <br />
-                                <br />
-                                <a href={previewTerritory.map_link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                    View on Google Maps
-                                </a>
-                            </p>
+                            <p className="text-zinc-600">{previewTerritory.map_description}</p>
+                            <a href={previewTerritory.map_link} target="_blank" rel="noopener noreferrer" className="inline-flex text-sm font-medium text-blue-700 hover:underline">
+                                View on Google Maps
+                            </a>
                         </div>
                     </div>
                 </div>

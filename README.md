@@ -1,37 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Territory Dispenser
 
-## Getting Started
+A Next.js app for distributing map territories by QR code, tracking assignment history, and managing territory availability from an admin dashboard.
 
-First, run the development server:
+## What The App Does
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- `/` shows the public QR dispenser and live assignment totals.
+- `/claim` assigns the next active, unassigned territory and redirects to its map page.
+- `/view/[id]` shows the assigned territory, map image, download action, sharing, and Google Maps link.
+- `/admin` is the operations dashboard for status, assignment counts, backend switching, territory uploads, group activation, resets, previews, and share links.
+
+## Data Model
+
+Territory records use this shape:
+
+```json
+{
+  "id": 1,
+  "territory_name": "KHT 1",
+  "map_link": "https://maps.app.goo.gl/example",
+  "map_image_url": "/maps/kht1.png",
+  "map_description": "Description of the territory.",
+  "active": true
+}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Assignment history is stored separately so the app can report:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- whether a territory is `available`, `assigned`, or `inactive`
+- how many times each territory has been assigned
+- when it was last assigned
+- total assignment events across all territories
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Local Database Mode
 
-## Learn More
+Local mode is the default.
 
-To learn more about Next.js, take a look at the following resources:
+- Territory definitions live in `data/territories.json`.
+- Assignment history lives in `data/assignment-state.json`.
+- Admin uploads replace the territory list in `data/territories.json`.
+- Reset Assignments clears `data/assignment-state.json`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This mode works without external services, but file writes are best for local/small deployments. Serverless hosts may not preserve local file changes between deployments.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Supabase Mode
 
-## Deploy on Vercel
+Supabase mode uses the Supabase REST API directly from server routes. No client-side Supabase key is required for normal app usage.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Create a Supabase project.
+2. Run `docs/supabase-schema.sql` in the Supabase SQL editor.
+3. Add these environment variables:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# MapDispenser
+```bash
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+TERRITORY_DATA_BACKEND=supabase
+```
+
+`TERRITORY_DATA_BACKEND` is optional. If omitted, the app starts in local mode and the admin dashboard can switch to Supabase at runtime.
+
+The admin dashboard upload tool can seed Supabase with the same JSON format used by `data/territories.json`.
+
+## API Routes
+
+- `GET /api/stats` returns dashboard totals and backend status.
+- `GET /api/territories` returns decorated territories with assignment status and counts.
+- `PATCH /api/territories` toggles one territory or a group of territories.
+- `POST /api/territories` uploads territories into the active backend.
+- `GET /api/assign` assigns the next available territory.
+- `POST /api/admin/assign` records an assignment for a specific territory.
+- `POST /api/admin/reset` clears assignment history in the active backend.
+- `GET /api/admin/database` returns the active backend.
+- `POST /api/admin/database` switches between `local` and `supabase`.
+- `GET /api/system-update` returns the active update banner.
+
+## Development
+
+```bash
+npm install
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+Run checks before committing:
+
+```bash
+npm run lint
+npm run build
+```

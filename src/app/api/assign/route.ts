@@ -2,10 +2,7 @@ import { NextResponse } from 'next/server';
 import { assignNextTerritory, getStats } from '@/lib/dispenserState';
 
 export async function GET() {
-    // Add a small artificial delay to simulate processing time if needed
-    // await new Promise(resolve => setTimeout(resolve, 500));
-
-    const stats = getStats();
+    const stats = await getStats();
 
     if (stats.remaining === 0) {
         return NextResponse.json(
@@ -14,7 +11,7 @@ export async function GET() {
         );
     }
 
-    const territory = assignNextTerritory();
+    const territory = await assignNextTerritory();
 
     if (!territory) {
         return NextResponse.json(

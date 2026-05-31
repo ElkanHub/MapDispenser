@@ -13,7 +13,7 @@ export async function POST(request: Request) {
             );
         }
 
-        const success = assignSpecificTerritory(id);
+        const success = await assignSpecificTerritory(id);
 
         if (!success) {
             return NextResponse.json(
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
         }
 
         return NextResponse.json({ success: true });
-    } catch (error) {
+    } catch {
         return NextResponse.json(
             { error: 'Invalid request body' },
             { status: 400 }
