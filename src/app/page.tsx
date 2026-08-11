@@ -16,7 +16,7 @@ interface Stats {
   assigned: number;
   remaining: number;
   totalAssignments: number;
-  backend: 'local' | 'supabase';
+  backend: 'local' | 'neon';
   isExhausted: boolean;
 }
 

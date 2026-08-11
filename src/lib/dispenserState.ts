@@ -1,7 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 
-export type DataBackend = 'local' | 'supabase';
+import { neon } from '@neondatabase/serverless';
+
+export type DataBackend = 'local' | 'neon';
 export type TerritoryStatus = 'inactive' | 'available' | 'assigned';
 
 export interface Territory {
@@ -65,42 +67,12 @@ const localStatePath = path.join(process.cwd(), 'data', 'assignment-state.json')
 
 let localTerritoriesCache: unknown[] | null = null;
 let localStateCache: LocalState | null = null;
-let activeBackend: DataBackend = process.env.TERRITORY_DATA_BACKEND === 'supabase' ? 'supabase' : 'local';
+let activeBackend: DataBackend = process.env.TERRITORY_DATA_BACKEND === 'neon' ? 'neon' : 'local';
 
-function getSupabaseConfig() {
-    const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!url || !key) {
-        throw new Error('Supabase backend requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY.');
-    }
-    return { url: url.replace(/\/$/, ''), key };
-}
-
-async function supabaseFetch<T>(resource: string, init: RequestInit = {}): Promise<T> {
-    const { url, key } = getSupabaseConfig();
-    const headers = new Headers(init.headers);
-    headers.set('apikey', key);
-    headers.set('Authorization', `Bearer ${key}`);
-    if (!headers.has('Content-Type') && init.body) {
-        headers.set('Content-Type', 'application/json');
-    }
-
-    const response = await fetch(`${url}/rest/v1/${resource}`, {
-        ...init,
-        headers,
-        cache: 'no-store',
-    });
-
-    if (!response.ok) {
-        const body = await response.text();
-        throw new Error(`Supabase request failed (${response.status}): ${body}`);
-    }
-
-    if (response.status === 204) {
-        return undefined as T;
-    }
-
-    return response.json() as Promise<T>;
+function sql() {
+    const url = process.env.DATABASE_URL;
+    if (!url) throw new Error('Neon backend requires DATABASE_URL.');
+    return neon(url);
 }
 
 function ensureLocalTerritories() {
@@ -192,11 +164,13 @@ async function getLocalTerritories(): Promise<Territory[]> {
     return decorateTerritories(getLocalTerritoriesBase(), localStateCache?.assignments || []);
 }
 
-async function getSupabaseTerritories(): Promise<Territory[]> {
+async function getNeonTerritories(): Promise<Territory[]> {
+    const db = sql();
     const [territories, assignments] = await Promise.all([
-        supabaseFetch<Territory[]>('territories?select=*&order=id.asc'),
-        supabaseFetch<{ territory_id: number; assigned_at: string }[]>('assignments?select=territory_id,assigned_at&order=assigned_at.desc'),
-    ]);
+        db`SELECT * FROM territories ORDER BY id ASC`,
+        // ponytail: ::text keeps timestamps as sortable ISO strings, matching the local backend
+        db`SELECT territory_id, assigned_at::text FROM assignments ORDER BY assigned_at DESC`,
+    ]) as [Territory[], { territory_id: number; assigned_at: string }[]];
 
     return decorateTerritories(
         territories.map((territory) => ({
@@ -223,7 +197,7 @@ export function setDataBackend(backend: DataBackend) {
 }
 
 export async function getTerritories(): Promise<Territory[]> {
-    return activeBackend === 'supabase' ? getSupabaseTerritories() : getLocalTerritories();
+    return activeBackend === 'neon' ? getNeonTerritories() : getLocalTerritories();
 }
 
 export async function getSystemUpdate(): Promise<SystemUpdate | null> {
@@ -231,7 +205,7 @@ export async function getSystemUpdate(): Promise<SystemUpdate | null> {
         return getLocalSystemUpdate();
     }
 
-    const updates = await supabaseFetch<SystemUpdate[]>('system_updates?select=title,message&active=eq.true&order=created_at.desc&limit=1');
+    const updates = await sql()`SELECT title, message FROM system_updates WHERE active ORDER BY created_at DESC LIMIT 1` as unknown as SystemUpdate[];
     return updates[0] || null;
 }
 
@@ -282,12 +256,8 @@ export async function assignSpecificTerritory(id: number): Promise<boolean> {
 async function recordAssignment(id: number) {
     const assignedAt = new Date().toISOString();
 
-    if (activeBackend === 'supabase') {
-        await supabaseFetch('assignments', {
-            method: 'POST',
-            headers: { Prefer: 'return=minimal' },
-            body: JSON.stringify({ territory_id: id, assigned_at: assignedAt }),
-        });
+    if (activeBackend === 'neon') {
+        await sql()`INSERT INTO assignments (territory_id, assigned_at) VALUES (${id}, ${assignedAt})`;
         return;
     }
 
@@ -301,15 +271,9 @@ export async function getTerritoryById(id: number): Promise<Territory | undefine
 }
 
 export async function toggleTerritoryActive(id: number): Promise<boolean> {
-    if (activeBackend === 'supabase') {
-        const territory = (await getTerritories()).find((item) => item.id === id);
-        if (!territory) return false;
-        await supabaseFetch(`territories?id=eq.${id}`, {
-            method: 'PATCH',
-            headers: { Prefer: 'return=minimal' },
-            body: JSON.stringify({ active: !territory.active }),
-        });
-        return true;
+    if (activeBackend === 'neon') {
+        const rows = await sql()`UPDATE territories SET active = NOT active WHERE id = ${id} RETURNING id`;
+        return rows.length > 0;
     }
 
     const territories = getLocalTerritoriesBase();
@@ -321,13 +285,9 @@ export async function toggleTerritoryActive(id: number): Promise<boolean> {
 }
 
 export async function setTerritoriesActive(ids: number[], active: boolean): Promise<boolean> {
-    if (activeBackend === 'supabase') {
-        await supabaseFetch(`territories?id=in.(${ids.join(',')})`, {
-            method: 'PATCH',
-            headers: { Prefer: 'return=minimal' },
-            body: JSON.stringify({ active }),
-        });
-        return true;
+    if (activeBackend === 'neon') {
+        const rows = await sql()`UPDATE territories SET active = ${active} WHERE id = ANY(${ids}) RETURNING id`;
+        return rows.length > 0;
     }
 
     const territories = getLocalTerritoriesBase();
@@ -343,11 +303,8 @@ export async function setTerritoriesActive(ids: number[], active: boolean): Prom
 }
 
 export async function resetAssignments() {
-    if (activeBackend === 'supabase') {
-        await supabaseFetch('assignments?id=not.is.null', {
-            method: 'DELETE',
-            headers: { Prefer: 'return=minimal' },
-        });
+    if (activeBackend === 'neon') {
+        await sql()`DELETE FROM assignments`;
         return true;
     }
 
@@ -366,15 +323,28 @@ export async function uploadTerritories(territories: Territory[]) {
         active: Boolean(territory.active),
     })).filter((territory) => territory.id && territory.territory_name);
 
-    if (activeBackend === 'supabase') {
-        await supabaseFetch('territories?on_conflict=id', {
-            method: 'POST',
-            headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-            body: JSON.stringify(normalized),
-        });
+    if (activeBackend === 'neon') {
+        // ponytail: one statement, json_to_recordset expands the array server-side
+        await sql()`
+            INSERT INTO territories (id, territory_name, map_link, map_image_url, map_description, active)
+            SELECT * FROM json_to_recordset(${JSON.stringify(normalized)}::json)
+                AS t(id int, territory_name text, map_link text, map_image_url text, map_description text, active boolean)
+            ON CONFLICT (id) DO UPDATE SET
+                territory_name = EXCLUDED.territory_name,
+                map_link = EXCLUDED.map_link,
+                map_image_url = EXCLUDED.map_image_url,
+                map_description = EXCLUDED.map_description,
+                active = EXCLUDED.active`;
         return normalized.length;
     }
 
-    persistLocalTerritories(normalized);
+    // ponytail: merge by id like the neon upsert, so uploading one territory can't wipe the file
+    const merged = getLocalTerritoriesBase();
+    for (const territory of normalized) {
+        const index = merged.findIndex((item) => item.id === territory.id);
+        if (index === -1) merged.push(territory);
+        else merged[index] = territory;
+    }
+    persistLocalTerritories(merged.sort((a, b) => a.id - b.id));
     return normalized.length;
 }

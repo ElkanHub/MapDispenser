@@ -10,9 +10,9 @@ export async function POST(request: Request) {
         const body = await request.json();
         const backend = body.backend as DataBackend;
 
-        if (backend !== 'local' && backend !== 'supabase') {
+        if (backend !== 'local' && backend !== 'neon') {
             return NextResponse.json(
-                { error: 'Backend must be "local" or "supabase".' },
+                { error: 'Backend must be "local" or "neon".' },
                 { status: 400 }
             );
         }

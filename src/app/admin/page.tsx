@@ -18,6 +18,8 @@ import {
     Info,
     Loader2,
     MapPinned,
+    Pencil,
+    Plus,
     RefreshCw,
     Upload,
     X
@@ -210,6 +212,7 @@ export default function AdminPage() {
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                         <Link href="/"><Button variant="outline"><HomeIcon />Home</Button></Link>
+                        <Link href="/admin/territory"><Button><Plus />Add Territory</Button></Link>
                         <Button
                             onClick={async () => {
                                 if (confirm('Reset all assignment history for the active database?')) {
@@ -258,17 +261,17 @@ export default function AdminPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2"><Database className="h-5 w-5" />Database Source</CardTitle>
-                            <CardDescription>Switch between the current local JSON store and Supabase.</CardDescription>
+                            <CardDescription>Switch between the local JSON store and the Neon Postgres database.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="flex items-center justify-between rounded-md border border-zinc-200 p-4">
                                 <div>
-                                    <p className="font-medium">Supabase mode</p>
+                                    <p className="font-medium">Neon database</p>
                                     <p className="text-sm text-zinc-500">Current: {backend}</p>
                                 </div>
                                 <Switch
-                                    checked={backend === 'supabase'}
-                                    onCheckedChange={(checked) => setDatabaseBackend(checked ? 'supabase' : 'local')}
+                                    checked={backend === 'neon'}
+                                    onCheckedChange={(checked) => setDatabaseBackend(checked ? 'neon' : 'local')}
                                 />
                             </div>
                             <div className="grid gap-3 sm:grid-cols-2">
@@ -287,8 +290,8 @@ export default function AdminPage() {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><Upload className="h-5 w-5" />Upload Territories</CardTitle>
-                            <CardDescription>Upload a JSON array with id, territory_name, map_link, map_image_url, map_description, and active.</CardDescription>
+                            <CardTitle className="flex items-center gap-2"><Upload className="h-5 w-5" />Bulk Upload</CardTitle>
+                            <CardDescription>Bulk import. For one territory at a time use Add Territory. JSON array with id, territory_name, map_link, map_image_url, map_description, and active.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-3">
                             <input
@@ -352,7 +355,7 @@ export default function AdminPage() {
                                                         className="h-20 w-20 shrink-0 overflow-hidden rounded-md border border-zinc-200 bg-zinc-100"
                                                         onClick={() => setPreviewTerritory(territory)}
                                                     >
-                                                        <img src={territory.map_image_url} alt="" className="h-full w-full object-cover" />
+                                                        <img src={territory.map_image_url} alt="" loading="lazy" className="h-full w-full object-contain" />
                                                     </button>
 
                                                     <div className="min-w-0 flex-1 space-y-3">
@@ -382,6 +385,9 @@ export default function AdminPage() {
                                                                     <MapPinned />
                                                                     Preview
                                                                 </Button>
+                                                                <Link href={`/admin/territory?id=${territory.id}`}>
+                                                                    <Button variant="ghost" size="sm"><Pencil />Edit</Button>
+                                                                </Link>
                                                             </div>
                                                             <div className="flex items-center gap-2">
                                                                 <span className="text-xs font-medium uppercase text-zinc-500">Active</span>

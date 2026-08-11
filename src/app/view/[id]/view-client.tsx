@@ -5,174 +5,191 @@ import { Territory } from '@/lib/dispenserState';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { MapPin, Download, ExternalLink, CheckCircle2 } from 'lucide-react';
+import { MapPin, Download, ExternalLink, CheckCircle2, Share2, X, ImageOff, ZoomIn } from 'lucide-react';
 
 export default function ViewTerritoryClient({ territory }: { territory: Territory }) {
-    const [showDownloadDialog, setShowDownloadDialog] = useState(false);
     const [showLightbox, setShowLightbox] = useState(false);
+    const [zoomed, setZoomed] = useState(false);
+    const [imageState, setImageState] = useState<'loading' | 'ready' | 'error'>('loading');
+    const [toast, setToast] = useState('');
+    const [showDownloadPrompt, setShowDownloadPrompt] = useState(false);
 
-    // Auto-trigger download modal after a short delay
+    // Prompt to save the map once the image is actually there, and only once per territory per device
     useEffect(() => {
+        if (imageState !== 'ready') return;
+        const key = `map-download-prompt-${territory.id}`;
+        if (localStorage.getItem(key)) return;
         const timer = setTimeout(() => {
-            setShowDownloadDialog(true);
+            setShowDownloadPrompt(true);
+            localStorage.setItem(key, '1');
         }, 1500);
         return () => clearTimeout(timer);
-    }, []);
+    }, [imageState, territory.id]);
+
+    useEffect(() => {
+        if (!toast) return;
+        const timer = setTimeout(() => setToast(''), 2500);
+        return () => clearTimeout(timer);
+    }, [toast]);
+
+    // Lock background scroll and allow Escape to close while the lightbox is open
+    useEffect(() => {
+        if (!showLightbox) return;
+        const onKey = (event: KeyboardEvent) => event.key === 'Escape' && setShowLightbox(false);
+        document.body.style.overflow = 'hidden';
+        window.addEventListener('keydown', onKey);
+        return () => {
+            document.body.style.overflow = '';
+            window.removeEventListener('keydown', onKey);
+        };
+    }, [showLightbox]);
 
     const handleDownload = () => {
         const link = document.createElement('a');
         link.href = territory.map_image_url;
-        link.download = `${territory.territory_name.replace(/\s+/g, '_')}_map.png`;
+        link.download = `${territory.territory_name.replace(/\s+/g, '_')}_map.${territory.map_image_url.split('.').pop() || 'png'}`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        setShowDownloadDialog(false);
     };
 
-    const handleShare = () => {
+    const handleShare = async () => {
         const url = window.location.href;
-        navigator.clipboard.writeText(url).then(() => {
-            // Could add a toast here
-            alert("Link copied to clipboard!");
-        }).catch(err => {
-            console.error('Failed to copy: ', err);
-        });
+        const shareData = { title: `Territory ${territory.territory_name}`, text: territory.map_description, url };
+
+        // Native share sheet on mobile, clipboard everywhere else
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+                return;
+            } catch {
+                // user dismissed the sheet — fall through to copying
+            }
+        }
+
+        try {
+            await navigator.clipboard.writeText(url);
+            setToast('Link copied to clipboard');
+        } catch {
+            setToast(url);
+        }
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6 flex flex-col items-center justify-center">
-
-            <div className="w-full max-w-md text-center mb-6 animate-in slide-in-from-top-4 duration-700">
-                <div className="flex items-center justify-center gap-2 text-green-600 mb-2">
-                    <CheckCircle2 className="h-6 w-6" />
-                    <span className="font-bold text-lg">Assigned Successfully</span>
-                </div>
-                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Your Territory</h1>
-            </div>
-
-            <Card className="w-full max-w-md shadow-2xl overflow-hidden border-2 border-slate-100">
-                <div
-                    className="relative aspect-video w-full bg-slate-100 cursor-zoom-in group"
-                    onClick={() => setShowLightbox(true)}
-                >
-                    {/* In a real app, use next/image with proper setup. For now, img is safer for local files without config. */}
-                    <img
-                        src={territory.map_image_url}
-                        alt={`Map of ${territory.territory_name}`}
-                        className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
-                        <div className="text-white">
-                            <h2 className="text-2xl font-bold">{territory.territory_name}</h2>
-                            <p className="text-slate-200">Territory #{territory.id}</p>
-                        </div>
+        <div className="min-h-screen bg-slate-50 p-4 sm:p-6">
+            <div className="mx-auto flex w-full max-w-md flex-col gap-5 py-4">
+                <div className="text-center">
+                    <div className="mb-2 flex items-center justify-center gap-2 text-emerald-600">
+                        <CheckCircle2 className="h-5 w-5" />
+                        <span className="text-sm font-semibold uppercase tracking-wide">Assigned to you</span>
                     </div>
+                    <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">{territory.territory_name}</h1>
+                    <p className="mt-1 text-sm text-slate-500">Territory #{territory.id}</p>
                 </div>
 
-                <CardContent className="p-6 space-y-4">
-                    <div className="space-y-2">
-                        <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+                <Card className="overflow-hidden border-slate-200 shadow-lg">
+                    <button
+                        type="button"
+                        aria-label="Open full map"
+                        className="relative block aspect-[4/3] w-full cursor-zoom-in bg-slate-100"
+                        onClick={() => imageState === 'ready' && setShowLightbox(true)}
+                    >
+                        {imageState === 'error' ? (
+                            <span className="flex h-full w-full flex-col items-center justify-center gap-2 text-slate-400">
+                                <ImageOff className="h-8 w-8" />
+                                <span className="text-sm">Map image unavailable</span>
+                            </span>
+                        ) : (
+                            <>
+                                {/* object-contain: maps must never be cropped */}
+                                <img
+                                    src={territory.map_image_url}
+                                    alt={`Map of ${territory.territory_name}`}
+                                    onLoad={() => setImageState('ready')}
+                                    onError={() => setImageState('error')}
+                                    className={`h-full w-full object-contain transition-opacity duration-300 ${imageState === 'ready' ? 'opacity-100' : 'opacity-0'}`}
+                                />
+                                {imageState === 'loading' && <span className="absolute inset-0 animate-pulse bg-slate-200" />}
+                                {imageState === 'ready' && (
+                                    <span className="absolute bottom-3 right-3 flex items-center gap-1 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
+                                        <ZoomIn className="h-3.5 w-3.5" />Tap to enlarge
+                                    </span>
+                                )}
+                            </>
+                        )}
+                    </button>
+
+                    <CardContent className="space-y-2 p-5">
+                        <h2 className="flex items-center gap-2 font-semibold text-slate-900">
                             <MapPin className="h-4 w-4 text-indigo-500" />
                             Description
-                        </h3>
-                        <p className="text-slate-600 leading-relaxed text-sm">
-                            {territory.map_description}
-                        </p>
-                    </div>
-                </CardContent>
+                        </h2>
+                        <p className="text-sm leading-relaxed text-slate-600">{territory.map_description || 'No description provided.'}</p>
+                    </CardContent>
 
-                <CardFooter className="p-6 bg-slate-50 flex flex-col gap-3">
-                    <Button
-                        className="w-full gap-2 text-lg py-6"
-                        onClick={() => window.open(territory.map_link, '_blank')}
-                    >
-                        <ExternalLink className="h-5 w-5" />
-                        Open in Google Maps
+                    <CardFooter className="flex flex-col gap-3 bg-slate-50 p-5">
+                        {territory.map_link && (
+                            <Button className="w-full gap-2 py-6 text-base" onClick={() => window.open(territory.map_link, '_blank', 'noopener,noreferrer')}>
+                                <ExternalLink className="h-5 w-5" />
+                                Open in Google Maps
+                            </Button>
+                        )}
+                        <div className="grid w-full grid-cols-2 gap-3">
+                            <Button variant="outline" className="w-full gap-2" onClick={handleShare}>
+                                <Share2 className="h-4 w-4" />Share
+                            </Button>
+                            <Button variant="outline" className="w-full gap-2" onClick={handleDownload} disabled={imageState === 'error'}>
+                                <Download className="h-4 w-4" />Save map
+                            </Button>
+                        </div>
+                    </CardFooter>
+                </Card>
+
+                <p className="text-center text-xs text-slate-400">Keep this link — it stays valid for your whole assignment.</p>
+            </div>
+
+            {showLightbox && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-2" onClick={() => setShowLightbox(false)}>
+                    <div className="h-full w-full overflow-auto overscroll-contain" onClick={(event) => event.stopPropagation()}>
+                        {/* zoom toggle works on touch, where hover does not */}
+                        <img
+                            src={territory.map_image_url}
+                            alt={`Map of ${territory.territory_name}`}
+                            onClick={() => setZoomed((prev) => !prev)}
+                            className={zoomed
+                                ? 'w-[250%] max-w-none cursor-zoom-out'
+                                : 'mx-auto h-full w-full cursor-zoom-in object-contain'}
+                        />
+                    </div>
+                    <Button size="icon" className="absolute right-4 top-4 rounded-full border-0 bg-white/15 text-white hover:bg-white/25" onClick={() => setShowLightbox(false)}>
+                        <X className="h-5 w-5" /><span className="sr-only">Close</span>
                     </Button>
+                    <Button variant="outline" className="absolute bottom-6 left-1/2 -translate-x-1/2 gap-2" onClick={handleDownload}>
+                        <Download className="h-4 w-4" />Save map
+                    </Button>
+                </div>
+            )}
 
-                    <div className="grid grid-cols-2 gap-3 w-full">
-                        <Button
-                            variant="outline"
-                            className="w-full gap-2"
-                            onClick={handleShare}
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-share-2"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" x2="15.42" y1="13.51" y2="17.49" /><line x1="15.41" x2="8.59" y1="6.51" y2="10.49" /></svg>
-                            Share
-                        </Button>
-                        <Button
-                            variant="outline"
-                            className="w-full gap-2"
-                            onClick={handleDownload}
-                        >
-                            <Download className="h-4 w-4" />
-                            Download
-                        </Button>
-                    </div>
-                </CardFooter>
-            </Card>
-
-            {/* Download Alert Dialog */}
-            <Dialog open={showDownloadDialog} onOpenChange={setShowDownloadDialog}>
+            <Dialog open={showDownloadPrompt} onOpenChange={setShowDownloadPrompt}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Save your map?</DialogTitle>
                         <DialogDescription>
-                            Would you like to download the map image for {territory.territory_name} to your device?
+                            Download the map for {territory.territory_name} so you can open it later without this link or a network connection.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="flex gap-2 sm:justify-end">
-                        <Button variant="ghost" onClick={() => setShowDownloadDialog(false)}>Cancel</Button>
-                        <Button onClick={handleDownload} className="gap-2">
-                            <Download className="h-4 w-4" />
-                            Download
+                        <Button variant="ghost" onClick={() => setShowDownloadPrompt(false)}>Not now</Button>
+                        <Button className="gap-2" onClick={() => { handleDownload(); setShowDownloadPrompt(false); }}>
+                            <Download className="h-4 w-4" />Download
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
-            {/* Lightbox Dialog */}
-            <Dialog open={showLightbox} onOpenChange={setShowLightbox}>
-                <DialogContent className="max-w-5xl w-[95vw] h-[90vh] p-0 overflow-hidden bg-transparent border-0 shadow-none flex items-center justify-center">
-                    <div
-                        className="relative w-full h-full flex items-center justify-center bg-transparent overflow-hidden"
-                        onClick={(e) => {
-                            if (e.target === e.currentTarget) setShowLightbox(false);
-                        }}
-                    >
-                        <div
-                            className="relative w-full h-full flex items-center justify-center"
-                            onMouseMove={(e) => {
-                                const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-                                const x = ((e.clientX - left) / width) * 100;
-                                const y = ((e.clientY - top) / height) * 100;
-                                e.currentTarget.style.setProperty('--x', `${x}%`);
-                                e.currentTarget.style.setProperty('--y', `${y}%`);
-                            }}
-                            style={{
-                                '--x': '50%',
-                                '--y': '50%',
-                            } as React.CSSProperties}
-                        >
-                            <img
-                                src={territory.map_image_url}
-                                alt={`Map of ${territory.territory_name}`}
-                                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl transition-transform duration-100 ease-out cursor-zoom-out hover:scale-[2.5]"
-                                style={{
-                                    transformOrigin: 'var(--x) var(--y)',
-                                }}
-                            />
-                        </div>
-                    </div>
-                    <Button
-                        className="absolute top-4 right-4 rounded-full bg-black/50 hover:bg-black/70 text-white border-0"
-                        size="icon"
-                        onClick={() => setShowLightbox(false)}
-                    >
-                        <span className="sr-only">Close</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
-                    </Button>
-                </DialogContent>
-            </Dialog>
+            {toast && (
+                <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-slate-900 px-4 py-2 text-sm text-white shadow-lg">{toast}</div>
+            )}
         </div>
     );
 }
