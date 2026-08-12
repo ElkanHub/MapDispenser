@@ -188,9 +188,14 @@ async function getNeonTerritories(): Promise<Territory[]> {
     );
 }
 
+// The switch this session made, if any. Wins over the file so a switch still
+// takes effect even when the filesystem refuses the write (read-only hosts).
+let memoryBackend: DataBackend | null = null;
+
 // ponytail: read the choice from disk on every call so it survives restarts and
 // stays right across worker processes. It is one tiny file; the OS caches it.
 export function getDataBackend(): DataBackend {
+    if (memoryBackend) return memoryBackend;
     try {
         const saved = JSON.parse(fs.readFileSync(backendChoicePath, 'utf8')).backend;
         if (saved === 'neon' || saved === 'local') return saved;
@@ -201,8 +206,14 @@ export function getDataBackend(): DataBackend {
 }
 
 export function setDataBackend(backend: DataBackend) {
-    fs.mkdirSync(path.dirname(backendChoicePath), { recursive: true });
-    fs.writeFileSync(backendChoicePath, JSON.stringify({ backend }, null, 2));
+    memoryBackend = backend;
+    try {
+        fs.mkdirSync(path.dirname(backendChoicePath), { recursive: true });
+        fs.writeFileSync(backendChoicePath, JSON.stringify({ backend }, null, 2));
+    } catch (error) {
+        // switch still holds for this process; it just won't survive a restart
+        console.error('Could not persist backend choice:', error);
+    }
     // drop the local caches so switching back re-reads the files from disk
     localTerritoriesCache = null;
     localStateCache = null;
