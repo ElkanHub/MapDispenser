@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getDataBackend, setDataBackend, type DataBackend } from '@/lib/dispenserState';
 
+// always read the live backend, never a cached render
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
     return NextResponse.json({ backend: getDataBackend() });
 }

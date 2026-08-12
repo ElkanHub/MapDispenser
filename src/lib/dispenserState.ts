@@ -67,7 +67,7 @@ const localStatePath = path.join(process.cwd(), 'data', 'assignment-state.json')
 
 let localTerritoriesCache: unknown[] | null = null;
 let localStateCache: LocalState | null = null;
-let activeBackend: DataBackend = process.env.TERRITORY_DATA_BACKEND === 'neon' ? 'neon' : 'local';
+const backendChoicePath = path.join(process.cwd(), 'data', 'backend.json');
 
 function sql() {
     const url = process.env.DATABASE_URL;
@@ -188,20 +188,32 @@ async function getNeonTerritories(): Promise<Territory[]> {
     );
 }
 
+// ponytail: read the choice from disk on every call so it survives restarts and
+// stays right across worker processes. It is one tiny file; the OS caches it.
 export function getDataBackend(): DataBackend {
-    return activeBackend;
+    try {
+        const saved = JSON.parse(fs.readFileSync(backendChoicePath, 'utf8')).backend;
+        if (saved === 'neon' || saved === 'local') return saved;
+    } catch {
+        // no choice saved yet — fall back to the environment default
+    }
+    return process.env.TERRITORY_DATA_BACKEND === 'neon' ? 'neon' : 'local';
 }
 
 export function setDataBackend(backend: DataBackend) {
-    activeBackend = backend;
+    fs.mkdirSync(path.dirname(backendChoicePath), { recursive: true });
+    fs.writeFileSync(backendChoicePath, JSON.stringify({ backend }, null, 2));
+    // drop the local caches so switching back re-reads the files from disk
+    localTerritoriesCache = null;
+    localStateCache = null;
 }
 
 export async function getTerritories(): Promise<Territory[]> {
-    return activeBackend === 'neon' ? getNeonTerritories() : getLocalTerritories();
+    return getDataBackend() === 'neon' ? getNeonTerritories() : getLocalTerritories();
 }
 
 export async function getSystemUpdate(): Promise<SystemUpdate | null> {
-    if (activeBackend === 'local') {
+    if (getDataBackend() === 'local') {
         return getLocalSystemUpdate();
     }
 
@@ -231,7 +243,7 @@ export async function getStats(): Promise<DashboardStats> {
         mostAssigned: mostAssigned && (mostAssigned.assignmentCount || 0) > 0 ? mostAssigned : null,
         recentlyAssigned,
         isExhausted: remaining === 0,
-        backend: activeBackend,
+        backend: getDataBackend(),
     };
 }
 
@@ -256,7 +268,7 @@ export async function assignSpecificTerritory(id: number): Promise<boolean> {
 async function recordAssignment(id: number) {
     const assignedAt = new Date().toISOString();
 
-    if (activeBackend === 'neon') {
+    if (getDataBackend() === 'neon') {
         await sql()`INSERT INTO assignments (territory_id, assigned_at) VALUES (${id}, ${assignedAt})`;
         return;
     }
@@ -271,7 +283,7 @@ export async function getTerritoryById(id: number): Promise<Territory | undefine
 }
 
 export async function toggleTerritoryActive(id: number): Promise<boolean> {
-    if (activeBackend === 'neon') {
+    if (getDataBackend() === 'neon') {
         const rows = await sql()`UPDATE territories SET active = NOT active WHERE id = ${id} RETURNING id`;
         return rows.length > 0;
     }
@@ -285,7 +297,7 @@ export async function toggleTerritoryActive(id: number): Promise<boolean> {
 }
 
 export async function setTerritoriesActive(ids: number[], active: boolean): Promise<boolean> {
-    if (activeBackend === 'neon') {
+    if (getDataBackend() === 'neon') {
         const rows = await sql()`UPDATE territories SET active = ${active} WHERE id = ANY(${ids}) RETURNING id`;
         return rows.length > 0;
     }
@@ -303,7 +315,7 @@ export async function setTerritoriesActive(ids: number[], active: boolean): Prom
 }
 
 export async function resetAssignments() {
-    if (activeBackend === 'neon') {
+    if (getDataBackend() === 'neon') {
         await sql()`DELETE FROM assignments`;
         return true;
     }
@@ -323,7 +335,7 @@ export async function uploadTerritories(territories: Territory[]) {
         active: Boolean(territory.active),
     })).filter((territory) => territory.id && territory.territory_name);
 
-    if (activeBackend === 'neon') {
+    if (getDataBackend() === 'neon') {
         // ponytail: one statement, json_to_recordset expands the array server-side
         await sql()`
             INSERT INTO territories (id, territory_name, map_link, map_image_url, map_description, active)

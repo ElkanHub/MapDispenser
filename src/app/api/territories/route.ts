@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getTerritories, toggleTerritoryActive, setTerritoriesActive, uploadTerritories } from '@/lib/dispenserState';
 
+// always read the live backend, never a cached render
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
     const territories = await getTerritories();
     return NextResponse.json(territories);

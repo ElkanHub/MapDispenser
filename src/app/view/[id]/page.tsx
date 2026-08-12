@@ -2,6 +2,9 @@ import { getTerritoryById } from '@/lib/dispenserState';
 import { notFound } from 'next/navigation';
 import ViewTerritoryClient from './view-client';
 
+// always read the live backend, never a cached render
+export const dynamic = 'force-dynamic';
+
 // Shared links (WhatsApp, etc.) get a real title and map thumbnail
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
