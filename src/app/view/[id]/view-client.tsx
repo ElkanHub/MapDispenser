@@ -105,6 +105,10 @@ export default function ViewTerritoryClient({ territory }: { territory: Territor
                                 <img
                                     src={territory.map_image_url}
                                     alt={`Map of ${territory.territory_name}`}
+                                    // ref catches images already loaded before hydration, when onLoad never fires
+                                    ref={(node) => {
+                                        if (node?.complete && node.naturalWidth > 0) setImageState('ready');
+                                    }}
                                     onLoad={() => setImageState('ready')}
                                     onError={() => setImageState('error')}
                                     className={`h-full w-full object-contain transition-opacity duration-300 ${imageState === 'ready' ? 'opacity-100' : 'opacity-0'}`}
