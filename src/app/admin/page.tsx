@@ -30,7 +30,9 @@ type UploadState = 'idle' | 'uploading' | 'success' | 'error';
 export default function AdminPage() {
     const [territories, setTerritories] = useState<Territory[]>([]);
     const [stats, setStats] = useState<DashboardStats | null>(null);
-    const [backend, setBackend] = useState<DataBackend>('local');
+    // null until the server tells us — never assume 'local', that reads as a flip back
+    const [backend, setBackend] = useState<DataBackend | null>(null);
+    const [backendError, setBackendError] = useState('');
     const [loading, setLoading] = useState(true);
     const [copiedId, setCopiedId] = useState<number | null>(null);
     const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
@@ -62,7 +64,12 @@ export default function AdminPage() {
                 fetch('/api/admin/database'),
             ]);
 
-            if (territoriesRes.ok) setTerritories(await territoriesRes.json());
+            if (territoriesRes.ok) {
+                setTerritories(await territoriesRes.json());
+                setBackendError('');
+            } else {
+                setBackendError('Could not read territories from the active database.');
+            }
             if (statsRes.ok) setStats(await statsRes.json());
             if (databaseRes.ok) {
                 const data = await databaseRes.json();
@@ -92,6 +99,7 @@ export default function AdminPage() {
     }, [territories]);
 
     const setDatabaseBackend = async (nextBackend: DataBackend) => {
+        const previous = backend;
         setBackend(nextBackend);
         const res = await fetch('/api/admin/database', {
             method: 'POST',
@@ -100,7 +108,7 @@ export default function AdminPage() {
         });
 
         if (!res.ok) {
-            setBackend(backend);
+            setBackend(previous);
             const data = await res.json().catch(() => ({}));
             setUploadState('error');
             setUploadMessage(data.error || 'Could not switch database backend.');
@@ -267,10 +275,12 @@ export default function AdminPage() {
                             <div className="flex items-center justify-between rounded-md border border-zinc-200 p-4">
                                 <div>
                                     <p className="font-medium">Neon database</p>
-                                    <p className="text-sm text-zinc-500">Current: {backend}</p>
+                                    <p className="text-sm text-zinc-500">Current: {backend ?? 'checking…'}</p>
+                                    {backendError && <p className="text-sm text-red-600">{backendError}</p>}
                                 </div>
                                 <Switch
                                     checked={backend === 'neon'}
+                                    disabled={backend === null}
                                     onCheckedChange={(checked) => setDatabaseBackend(checked ? 'neon' : 'local')}
                                 />
                             </div>
@@ -307,7 +317,7 @@ export default function AdminPage() {
                                 className="min-h-28 w-full rounded-md border border-zinc-200 bg-white p-3 font-mono text-xs outline-none focus:ring-2 focus:ring-zinc-300"
                             />
                             <div className="flex items-center justify-between gap-3">
-                                <p className={`text-sm ${uploadState === 'error' ? 'text-red-600' : 'text-zinc-500'}`}>{uploadMessage || `Target database: ${backend}`}</p>
+                                <p className={`text-sm ${uploadState === 'error' ? 'text-red-600' : 'text-zinc-500'}`}>{uploadMessage || `Target database: ${backend ?? '…'}`}</p>
                                 <Button onClick={uploadTerritories} disabled={!uploadText || uploadState === 'uploading'}>
                                     {uploadState === 'uploading' ? <Loader2 className="animate-spin" /> : <Upload />}
                                     Upload
