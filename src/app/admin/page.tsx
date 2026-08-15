@@ -18,6 +18,7 @@ import {
     Info,
     Loader2,
     MapPinned,
+    MessageCircle,
     Pencil,
     Plus,
     RefreshCw,
@@ -149,6 +150,15 @@ export default function AdminPage() {
         else fetchDashboard();
     };
 
+    const markAssigned = async (id: number) => {
+        const res = await fetch('/api/admin/assign', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id }),
+        });
+        if (res.ok) fetchDashboard();
+    };
+
     const markAssignedAndShare = async (territory: Territory) => {
         const url = `${window.location.origin}/view/${territory.id}`;
         try {
@@ -158,13 +168,15 @@ export default function AdminPage() {
         } catch {
             alert(`Could not copy to clipboard. URL: ${url}`);
         }
+        await markAssigned(territory.id);
+    };
 
-        const res = await fetch('/api/admin/assign', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: territory.id }),
-        });
-        if (res.ok) fetchDashboard();
+    const shareToWhatsApp = (territory: Territory) => {
+        const url = `${window.location.origin}/view/${territory.id}`;
+        const text = encodeURIComponent(`${territory.territory_name}\n${url}`);
+        // No number: WhatsApp opens with the message prefilled, sender picks the contact
+        window.open(`https://wa.me/?text=${text}`, '_blank');
+        markAssigned(territory.id);
     };
 
     const handleUploadFile = async (file: File | undefined) => {
@@ -390,6 +402,10 @@ export default function AdminPage() {
                                                                 <Button variant="outline" size="sm" onClick={() => markAssignedAndShare(territory)}>
                                                                     <Copy />
                                                                     {copiedId === territory.id ? 'Copied' : 'Share'}
+                                                                </Button>
+                                                                <Button variant="outline" size="sm" className="text-emerald-700" onClick={() => shareToWhatsApp(territory)}>
+                                                                    <MessageCircle />
+                                                                    WhatsApp
                                                                 </Button>
                                                                 <Button variant="ghost" size="sm" onClick={() => setPreviewTerritory(territory)}>
                                                                     <MapPinned />
