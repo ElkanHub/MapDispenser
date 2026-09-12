@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getActiveCheckoutForUser, getUserById } from '@/lib/appState';
+import { getActiveCheckoutForUser, getUserById, listLandmarks } from '@/lib/appState';
 import { getSession } from '@/lib/auth';
 import { getTerritoryById } from '@/lib/dispenserState';
 
@@ -22,5 +22,6 @@ export async function GET() {
     return NextResponse.json({
         checkout: { id: checkout.id, assigned_at: checkout.assigned_at, token: checkout.token },
         territory,
+        landmarks: await listLandmarks(),
     });
 }

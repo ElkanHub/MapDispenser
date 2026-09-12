@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { upsertLandmarks } from '@/lib/appState';
 import { requireSession } from '@/lib/auth';
 import { getTerritories, setTerritoryGeometry, uploadTerritories, type Territory } from '@/lib/dispenserState';
 import { isTerritoryGeometry } from '@/lib/geo';
@@ -18,9 +19,9 @@ export async function POST(request: Request) {
         const file = form.get('file');
         if (!(file instanceof File)) return NextResponse.json({ error: 'Attach a .kmz or .kml file.' }, { status: 400 });
 
-        const placemarks = await parseKmzOrKml(Buffer.from(await file.arrayBuffer()), file.name);
-        if (!placemarks.length) {
-            return NextResponse.json({ error: 'No polygons found in this file. Draw territories as polygons in Google Earth, then export again.' }, { status: 400 });
+        const { placemarks, points } = await parseKmzOrKml(Buffer.from(await file.arrayBuffer()), file.name);
+        if (!placemarks.length && !points.length) {
+            return NextResponse.json({ error: 'No polygons or pins found in this file. Draw territories as polygons in Google Earth, then export again.' }, { status: 400 });
         }
 
         const territories = await getTerritories();
@@ -40,7 +41,17 @@ export async function POST(request: Request) {
             };
         });
 
-        return NextResponse.json({ items, existing: territories.length });
+        const landmarks = points.map((point, index) => ({
+            key: index,
+            name: point.name || `Pin ${index + 1}`,
+            description: point.description,
+            color: point.color,
+            lng: point.lng,
+            lat: point.lat,
+            include: true,
+        }));
+
+        return NextResponse.json({ items, landmarks, existing: territories.length });
     } catch (error) {
         return NextResponse.json({ error: error instanceof Error ? error.message : 'Could not read that file.' }, { status: 400 });
     }
@@ -81,7 +92,20 @@ export async function PUT(request: Request) {
         }
 
         if (created.length) await uploadTerritories(created);
-        return NextResponse.json({ success: true, updated, created: created.length });
+
+        const landmarks = (Array.isArray(body.landmarks) ? body.landmarks : [])
+            .filter((landmark: { include?: boolean; name?: unknown; lng?: unknown; lat?: unknown }) =>
+                landmark.include && landmark.name && Number.isFinite(Number(landmark.lng)) && Number.isFinite(Number(landmark.lat)))
+            .map((landmark: { name: unknown; description?: unknown; color?: unknown; lng: unknown; lat: unknown }) => ({
+                name: String(landmark.name).trim(),
+                description: String(landmark.description || ''),
+                color: String(landmark.color || ''),
+                lng: Number(landmark.lng),
+                lat: Number(landmark.lat),
+            }));
+        const pins = landmarks.length ? await upsertLandmarks(landmarks) : 0;
+
+        return NextResponse.json({ success: true, updated, created: created.length, pins });
     } catch (error) {
         return NextResponse.json({ error: error instanceof Error ? error.message : 'Import failed.' }, { status: 400 });
     }

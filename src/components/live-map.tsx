@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type * as Leaflet from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -14,19 +14,33 @@ export interface MapShape {
     status?: 'available' | 'assigned' | 'inactive';
 }
 
+export interface MapLandmark {
+    id: number;
+    name: string;
+    color?: string;
+    lng: number;
+    lat: number;
+}
+
 interface LiveMapProps {
     shapes: MapShape[];
+    landmarks?: MapLandmark[];
     highlightId?: number;
     colorBy?: 'status' | 'highlight';
     showLocation?: boolean;
     onSelect?: (id: number) => void;
     className?: string;
     interactive?: boolean;
+    /** Tailwind placement classes for the basemap toggle, so pages can keep it clear of their own chips */
+    layersClass?: string;
 }
+
+type Basemap = 'streets' | 'satellite';
 
 const STATUS_COLORS = { available: '#059669', assigned: '#d97706', inactive: '#94a3b8' };
 const HIGHLIGHT_COLOR = '#4f46e5';
 const NEUTRAL_COLOR = '#64748b';
+const BASEMAP_KEY = 'md-basemap';
 
 function shapeColor(shape: MapShape, highlightId: number | undefined, colorBy: 'status' | 'highlight') {
     if (shape.id === highlightId) return HIGHLIGHT_COLOR;
@@ -42,26 +56,75 @@ function toLatLngs(geometry: TerritoryGeometry): [number, number][][] {
 
 export default function LiveMap({
     shapes,
+    landmarks = [],
     highlightId,
     colorBy = 'highlight',
     showLocation = false,
     onSelect,
     className = '',
     interactive = true,
+    layersClass = 'right-3 top-[max(env(safe-area-inset-top),12px)]',
 }: LiveMapProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<Leaflet.Map | null>(null);
     const leafletRef = useRef<typeof Leaflet | null>(null);
     const shapeLayerRef = useRef<Leaflet.LayerGroup | null>(null);
     const locationLayerRef = useRef<Leaflet.LayerGroup | null>(null);
+    const tilesRef = useRef<{ streets: Leaflet.TileLayer; satellite: Leaflet.TileLayer; labels: Leaflet.TileLayer } | null>(null);
     const followRef = useRef(true);
     const [inside, setInside] = useState<boolean | null>(null);
     const [locationError, setLocationError] = useState('');
     const positionRef = useRef<[number, number] | null>(null);
+    const [basemap, setBasemap] = useState<Basemap>('streets');
+    const basemapRef = useRef<Basemap>('streets');
 
     const highlight = shapes.find((shape) => shape.id === highlightId);
 
-    // Create the map once, then redraw polygons whenever the data changes.
+    // remembered per device
+    useEffect(() => {
+        try {
+            if (localStorage.getItem(BASEMAP_KEY) === 'satellite') setBasemap('satellite');
+        } catch { /* private mode */ }
+    }, []);
+
+    const applyBasemap = useCallback((L: typeof Leaflet, map: Leaflet.Map) => {
+        if (!tilesRef.current) {
+            tilesRef.current = {
+                streets: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; OpenStreetMap',
+                }),
+                satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 19,
+                    attribution: '&copy; Esri',
+                }),
+                // place names on top of imagery, so satellite still reads like a map
+                labels: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 19,
+                }),
+            };
+        }
+        const tiles = tilesRef.current;
+        if (basemapRef.current === 'satellite') {
+            map.removeLayer(tiles.streets);
+            tiles.satellite.addTo(map);
+            tiles.labels.addTo(map);
+        } else {
+            map.removeLayer(tiles.satellite);
+            map.removeLayer(tiles.labels);
+            tiles.streets.addTo(map);
+        }
+    }, []);
+
+    useEffect(() => {
+        basemapRef.current = basemap;
+        try { localStorage.setItem(BASEMAP_KEY, basemap); } catch { /* private mode */ }
+        const L = leafletRef.current;
+        const map = mapRef.current;
+        if (L && map) applyBasemap(L, map);
+    }, [basemap, applyBasemap]);
+
+    // Create the map once, then redraw polygons + pins whenever the data changes.
     useEffect(() => {
         let cancelled = false;
 
@@ -87,12 +150,9 @@ export default function LiveMap({
                     inertia: true,
                 });
                 map.attributionControl.setPrefix('');
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '&copy; OpenStreetMap',
-                }).addTo(map);
                 map.on('dragstart', () => { followRef.current = false; });
                 mapRef.current = map;
+                applyBasemap(L, map);
             }
 
             const map = mapRef.current;
@@ -120,6 +180,22 @@ export default function LiveMap({
                 if (fitThis) bounds = bounds ? bounds.extend(box) : L.latLngBounds(box.getSouthWest(), box.getNorthEast());
             }
 
+            // landmarks from the KMZ: small pins with always-on labels
+            for (const landmark of landmarks) {
+                const pin = L.circleMarker([landmark.lat, landmark.lng], {
+                    radius: 5.5,
+                    color: '#ffffff',
+                    weight: 2,
+                    fillColor: landmark.color || '#334155',
+                    fillOpacity: 1,
+                }).addTo(layer);
+                pin.bindTooltip(landmark.name, { direction: 'top', offset: [0, -8], permanent: true, className: 'landmark-label' });
+                if (!shapes.length) {
+                    const spot = L.latLng(landmark.lat, landmark.lng);
+                    bounds = bounds ? bounds.extend(spot) : L.latLngBounds(spot, spot);
+                }
+            }
+
             if (bounds) map.fitBounds(bounds, { padding: [30, 30], maxZoom: 17 });
             else map.setView([0, 0], 2);
             // container mounts inside animated layouts; make sure sizing settles
@@ -127,9 +203,9 @@ export default function LiveMap({
         })();
 
         return () => { cancelled = true; };
-    }, [shapes, highlightId, colorBy, interactive, onSelect]);
+    }, [shapes, landmarks, highlightId, colorBy, interactive, onSelect, applyBasemap]);
 
-    useEffect(() => () => { mapRef.current?.remove(); mapRef.current = null; }, []);
+    useEffect(() => () => { mapRef.current?.remove(); mapRef.current = null; tilesRef.current = null; }, []);
 
     // Live position dot + inside/outside check against the highlighted territory.
     useEffect(() => {
@@ -183,6 +259,21 @@ export default function LiveMap({
     return (
         <div className={`relative overflow-hidden ${className}`}>
             <div ref={containerRef} className="absolute inset-0 z-0" />
+
+            {interactive && (
+                <button
+                    type="button"
+                    onClick={() => setBasemap((prev) => (prev === 'streets' ? 'satellite' : 'streets'))}
+                    aria-label={basemap === 'streets' ? 'Switch to satellite view' : 'Switch to map view'}
+                    className={`absolute z-[500] flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 shadow-md backdrop-blur active:scale-95 ${basemap === 'satellite' ? 'bg-slate-800 text-white' : 'bg-white/95 text-slate-700'} ${layersClass}`}
+                >
+                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round">
+                        <path d="M12 3 2.5 8 12 13l9.5-5L12 3Z" />
+                        <path d="m4.4 12-1.9 1 9.5 5 9.5-5-1.9-1" />
+                        <path d="m4.4 16-1.9 1 9.5 5 9.5-5-1.9-1" />
+                    </svg>
+                </button>
+            )}
 
             {showLocation && (
                 <>

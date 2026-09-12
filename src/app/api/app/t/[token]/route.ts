@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getCheckoutByToken } from '@/lib/appState';
+import { getCheckoutByToken, listLandmarks } from '@/lib/appState';
 import { getTerritoryById } from '@/lib/dispenserState';
 
 export const dynamic = 'force-dynamic';
@@ -19,5 +19,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tok
     return NextResponse.json({
         checkout: { holder_name: checkout.holder_name, assigned_at: checkout.assigned_at },
         territory,
+        landmarks: await listLandmarks(),
     });
 }

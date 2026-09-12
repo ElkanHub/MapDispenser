@@ -11,6 +11,19 @@ export interface ParsedPlacemark {
     geometry: TerritoryGeometry;
 }
 
+export interface ParsedPoint {
+    name: string;
+    description: string;
+    color: string;
+    lng: number;
+    lat: number;
+}
+
+export interface ParsedKml {
+    placemarks: ParsedPlacemark[];
+    points: ParsedPoint[];
+}
+
 // KML colors are aabbggrr; the app wants #rrggbb.
 function kmlColorToHex(value: unknown): string {
     if (typeof value !== 'string') return '';
@@ -30,7 +43,7 @@ function stripHtml(value: string): string {
 }
 
 // Accepts a KMZ (zip with a .kml inside) or a bare KML file.
-export async function parseKmzOrKml(buffer: Buffer, filename: string): Promise<ParsedPlacemark[]> {
+export async function parseKmzOrKml(buffer: Buffer, filename: string): Promise<ParsedKml> {
     let kmlText: string;
 
     if (filename.toLowerCase().endsWith('.kml') || buffer.subarray(0, 5).toString('utf8').startsWith('<?xml')) {
@@ -47,28 +60,46 @@ export async function parseKmzOrKml(buffer: Buffer, filename: string): Promise<P
     const collection = kmlToGeoJson(dom as unknown as Document);
 
     const placemarks: ParsedPlacemark[] = [];
+    const points: ParsedPoint[] = [];
     for (const feature of collection.features) {
         if (!feature.geometry) continue;
-
-        // GeometryCollections from Google Earth folders: pull out the polygon
-        let geometry: unknown = feature.geometry;
-        if (feature.geometry.type === 'GeometryCollection') {
-            geometry = feature.geometry.geometries.find((g) => g.type === 'Polygon' || g.type === 'MultiPolygon');
-        }
-        if (!isTerritoryGeometry(geometry)) continue;
 
         const props = (feature.properties || {}) as Record<string, unknown>;
         // CDATA descriptions arrive as { "@type": "html", value: "..." }
         const rawDescription = props.description && typeof props.description === 'object'
             ? String((props.description as { value?: unknown }).value || '')
             : String(props.description || '');
-        placemarks.push({
-            name: String(props.name || '').trim(),
-            description: stripHtml(rawDescription),
-            color: kmlColorToHex(props.fill) || kmlColorToHex(props.stroke) || '',
-            geometry,
-        });
+        const name = String(props.name || '').trim();
+        const description = stripHtml(rawDescription);
+
+        // GeometryCollections from Google Earth folders: pull out the polygon/point
+        const geometries = feature.geometry.type === 'GeometryCollection'
+            ? feature.geometry.geometries
+            : [feature.geometry];
+
+        const polygon = geometries.find((g) => isTerritoryGeometry(g));
+        const point = geometries.find((g) => g.type === 'Point');
+
+        if (polygon && isTerritoryGeometry(polygon)) {
+            placemarks.push({
+                name,
+                description,
+                color: kmlColorToHex(props.fill) || kmlColorToHex(props.stroke) || '',
+                geometry: polygon,
+            });
+        } else if (point && point.type === 'Point' && Array.isArray(point.coordinates)) {
+            const [lng, lat] = point.coordinates as number[];
+            if (Number.isFinite(lng) && Number.isFinite(lat)) {
+                points.push({
+                    name,
+                    description,
+                    color: kmlColorToHex(props['icon-color']) || kmlColorToHex(props['marker-color']) || kmlColorToHex(props.stroke) || '',
+                    lng,
+                    lat,
+                });
+            }
+        }
     }
 
-    return placemarks;
+    return { placemarks, points };
 }

@@ -127,8 +127,10 @@ export default function AdminDeskPage() {
                     geometry: territory.geometry!,
                     status: territory.status,
                 }))}
+                landmarks={data.landmarks}
                 colorBy="status"
                 onSelect={handleSelect}
+                layersClass="right-3 top-28"
                 className="h-full w-full"
             />
 

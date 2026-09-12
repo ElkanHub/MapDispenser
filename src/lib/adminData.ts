@@ -37,6 +37,7 @@ export interface AdminOverview {
     users: AdminUser[];
     activity: { id: number; territory: string; holder: string; status: string; assigned_at: string; ended_at: string | null }[];
     settings: { congregation_name: string; join_code: string; team_code: string } | null;
+    landmarks: { id: number; name: string; description: string; color: string; lng: number; lat: number }[];
     stats: { total: number; available: number; assigned: number; inactive: number; withMap: number };
 }
 

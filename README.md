@@ -26,7 +26,9 @@ A Next.js app for a congregation's territory work: import territory polygons fro
 
 ## KMZ import rules
 
-Placemarks match territories **by name** (case-insensitive) — name your Google Earth polygons exactly like the territory names (`KHT 1`, …). Matched placemarks update the boundary and color in place; unmatched ones create new territories; re-importing never touches assignment history. Points/lines are skipped.
+Placemarks match territories **by name** (case-insensitive) — name your Google Earth polygons exactly like the territory names (`KHT 1`, …). Matched placemarks update the boundary and color in place; unmatched ones create new territories; re-importing never touches assignment history. **Point placemarks import as landmarks** — pins with always-on labels drawn on every map to help people orient (re-importing moves pins by name, never duplicates). Lines are skipped.
+
+Every interactive map also has a basemap toggle: normal street map (OpenStreetMap) or satellite imagery with place labels (Esri). The choice is remembered per device.
 
 ## Data model
 

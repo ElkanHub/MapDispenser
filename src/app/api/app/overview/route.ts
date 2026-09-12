@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSettings, listCheckouts, listUsers } from '@/lib/appState';
+import { getSettings, listCheckouts, listLandmarks, listUsers } from '@/lib/appState';
 import { requireSession } from '@/lib/auth';
 import { getTerritories } from '@/lib/dispenserState';
 
@@ -11,11 +11,12 @@ export async function GET() {
     const session = await requireSession(true);
     if (!session) return NextResponse.json({ error: 'Not allowed.' }, { status: 401 });
 
-    const [territories, users, checkouts, settings] = await Promise.all([
+    const [territories, users, checkouts, settings, landmarks] = await Promise.all([
         getTerritories(),
         listUsers(),
         listCheckouts(),
         getSettings(),
+        listLandmarks(),
     ]);
 
     const usersById = new Map(users.map((user) => [user.id, user]));
@@ -69,6 +70,7 @@ export async function GET() {
         users: usersWithHolds,
         activity,
         settings,
+        landmarks,
         stats: {
             total: territories.length,
             available: activeTerritories.filter((territory) => territory.status === 'available').length,

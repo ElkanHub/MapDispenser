@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 
 import LiveMapScreen from '@/components/live-map-screen';
+import type { MapLandmark } from '@/components/live-map';
 import type { PanelTerritory } from '@/components/territory-panel';
 
 export default function MyMapPage() {
     const router = useRouter();
     const [territory, setTerritory] = useState<PanelTerritory | null>(null);
+    const [landmarks, setLandmarks] = useState<MapLandmark[]>([]);
 
     useEffect(() => {
         fetch('/api/app/my-assignment')
@@ -18,8 +20,12 @@ export default function MyMapPage() {
                 return res.json();
             })
             .then((data) => {
-                if (data.territory) setTerritory(data.territory);
-                else router.replace('/home');
+                if (data.territory) {
+                    setTerritory(data.territory);
+                    setLandmarks(data.landmarks || []);
+                } else {
+                    router.replace('/home');
+                }
             })
             .catch(() => router.replace('/login'));
     }, [router]);
@@ -32,5 +38,5 @@ export default function MyMapPage() {
         );
     }
 
-    return <LiveMapScreen territory={territory} backHref="/home" />;
+    return <LiveMapScreen territory={territory} landmarks={landmarks} backHref="/home" />;
 }

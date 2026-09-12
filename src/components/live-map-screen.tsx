@@ -3,12 +3,12 @@
 import Link from 'next/link';
 import { ArrowLeft, Navigation } from 'lucide-react';
 
-import LiveMap from '@/components/live-map';
+import LiveMap, { type MapLandmark } from '@/components/live-map';
 import { navigateUrl, type PanelTerritory } from '@/components/territory-panel';
 import { Button } from '@/components/ui/button';
 
 // Full-screen live map: pulsing boundary, live location dot, navigate handoff.
-export default function LiveMapScreen({ territory, backHref }: { territory: PanelTerritory; backHref: string }) {
+export default function LiveMapScreen({ territory, backHref, landmarks = [] }: { territory: PanelTerritory; backHref: string; landmarks?: MapLandmark[] }) {
     const navUrl = navigateUrl(territory);
 
     return (
@@ -16,8 +16,10 @@ export default function LiveMapScreen({ territory, backHref }: { territory: Pane
             {territory.geometry ? (
                 <LiveMap
                     shapes={[{ id: territory.id, name: territory.territory_name, geometry: territory.geometry, color: territory.color }]}
+                    landmarks={landmarks}
                     highlightId={territory.id}
                     showLocation
+                    layersClass="right-3 top-[calc(max(env(safe-area-inset-top),12px)+56px)]"
                     className="h-full w-full"
                 />
             ) : (

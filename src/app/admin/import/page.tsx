@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { CheckCircle2, FileUp, Loader2, Upload } from 'lucide-react';
+import { CheckCircle2, FileUp, Loader2, MapPin, Upload } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import LiveMap from '@/components/live-map';
@@ -19,12 +19,23 @@ interface PreviewItem {
     include: boolean;
 }
 
+interface PreviewLandmark {
+    key: number;
+    name: string;
+    description: string;
+    color: string;
+    lng: number;
+    lat: number;
+    include: boolean;
+}
+
 export default function ImportPage() {
     const [fileName, setFileName] = useState('');
     const [items, setItems] = useState<PreviewItem[] | null>(null);
+    const [pins, setPins] = useState<PreviewLandmark[]>([]);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
-    const [result, setResult] = useState<{ updated: number; created: number } | null>(null);
+    const [result, setResult] = useState<{ updated: number; created: number; pins: number } | null>(null);
 
     const upload = async (file: File | undefined) => {
         if (!file) return;
@@ -40,6 +51,7 @@ export default function ImportPage() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Could not read that file.');
             setItems(data.items);
+            setPins(data.landmarks || []);
         } catch (uploadError) {
             setError(uploadError instanceof Error ? uploadError.message : 'Could not read that file.');
         } finally {
@@ -55,12 +67,13 @@ export default function ImportPage() {
             const res = await fetch('/api/app/import', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ items }),
+                body: JSON.stringify({ items, landmarks: pins }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Import failed.');
-            setResult({ updated: data.updated, created: data.created });
+            setResult({ updated: data.updated, created: data.created, pins: data.pins || 0 });
             setItems(null);
+            setPins([]);
         } catch (applyError) {
             setError(applyError instanceof Error ? applyError.message : 'Import failed.');
         } finally {
@@ -104,7 +117,7 @@ export default function ImportPage() {
                     <div className="mt-4 flex flex-col items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-6 text-center">
                         <CheckCircle2 className="h-8 w-8 text-emerald-600" />
                         <p className="font-bold text-emerald-900">
-                            Imported — {result.updated} updated{result.created ? `, ${result.created} new` : ''}
+                            Imported — {result.updated} updated{result.created ? `, ${result.created} new` : ''}{result.pins ? `, ${result.pins} pins` : ''}
                         </p>
                         <p className="text-sm text-emerald-800">The live maps now use these boundaries.</p>
                         <div className="mt-1 flex gap-2">
@@ -116,10 +129,11 @@ export default function ImportPage() {
 
                 {items && (
                     <>
-                        {included.length > 0 && (
+                        {(included.length > 0 || pins.some((pin) => pin.include)) && (
                             <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 shadow-sm">
                                 <LiveMap
                                     shapes={included.map((item) => ({ id: item.key, name: item.name, geometry: item.geometry, color: item.color || undefined }))}
+                                    landmarks={pins.filter((pin) => pin.include).map((pin) => ({ id: pin.key, name: pin.name, color: pin.color || undefined, lng: pin.lng, lat: pin.lat }))}
                                     className="h-72 w-full"
                                 />
                             </div>
@@ -155,9 +169,39 @@ export default function ImportPage() {
                             </div>
                         </section>
 
-                        <Button className="mt-4 w-full gap-2 py-6 text-base" disabled={busy || included.length === 0} onClick={apply}>
+                        {pins.length > 0 && (
+                            <section className="mt-4">
+                                <h2 className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                    {pins.length} pins (landmarks)
+                                </h2>
+                                <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white shadow-sm">
+                                    {pins.map((pin) => (
+                                        <label key={pin.key} className="flex cursor-pointer items-center gap-3 px-4 py-3">
+                                            <input
+                                                id={`import-pin-${pin.key}`}
+                                                type="checkbox"
+                                                checked={pin.include}
+                                                onChange={() => setPins((prev) => prev.map((entry) =>
+                                                    entry.key === pin.key ? { ...entry, include: !entry.include } : entry))}
+                                                className="h-4 w-4 accent-indigo-600"
+                                            />
+                                            <MapPin className="h-4 w-4 shrink-0" style={{ color: pin.color || '#334155' }} />
+                                            <div className="min-w-0 flex-1">
+                                                <p className="truncate text-sm font-semibold text-slate-900">{pin.name}</p>
+                                                {pin.description && <p className="truncate text-xs text-slate-500">{pin.description}</p>}
+                                            </div>
+                                            <span className="rounded-full bg-sky-100 px-2.5 py-1 text-[11px] font-semibold text-sky-800">landmark</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
+                        <Button className="mt-4 w-full gap-2 py-6 text-base" disabled={busy || (included.length === 0 && !pins.some((pin) => pin.include))} onClick={apply}>
                             {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
-                            Import {included.length} territor{included.length === 1 ? 'y' : 'ies'}
+                            Import {included.length > 0 && `${included.length} territor${included.length === 1 ? 'y' : 'ies'}`}
+                            {included.length > 0 && pins.some((pin) => pin.include) && ' + '}
+                            {pins.some((pin) => pin.include) && `${pins.filter((pin) => pin.include).length} pins`}
                         </Button>
                     </>
                 )}

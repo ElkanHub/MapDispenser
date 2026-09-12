@@ -41,12 +41,23 @@ export interface Checkout {
     ended_at: string | null;
 }
 
+export interface Landmark {
+    id: number;
+    name: string;
+    description: string;
+    color: string;
+    lng: number;
+    lat: number;
+}
+
 interface AppFileState {
     settings: CongregationSettings | null;
     users: AppUser[];
     checkouts: Checkout[];
+    landmarks: Landmark[];
     nextUserId: number;
     nextCheckoutId: number;
+    nextLandmarkId: number;
 }
 
 const appStatePath = path.join(process.cwd(), 'data', 'app-state.json');
@@ -71,11 +82,13 @@ function readLocal(): AppFileState {
             settings: state.settings || null,
             users: state.users || [],
             checkouts: state.checkouts || [],
+            landmarks: state.landmarks || [],
             nextUserId: state.nextUserId || 1,
             nextCheckoutId: state.nextCheckoutId || 1,
+            nextLandmarkId: state.nextLandmarkId || 1,
         };
     } catch {
-        return { settings: null, users: [], checkouts: [], nextUserId: 1, nextCheckoutId: 1 };
+        return { settings: null, users: [], checkouts: [], landmarks: [], nextUserId: 1, nextCheckoutId: 1, nextLandmarkId: 1 };
     }
 }
 
@@ -343,4 +356,52 @@ export async function endCheckout(checkoutId: number, status: 'returned' | 'clea
     checkout.ended_at = new Date().toISOString();
     writeLocal(state);
     return true;
+}
+
+// ---------------- landmarks (pins from the KMZ) ----------------
+
+export async function listLandmarks(): Promise<Landmark[]> {
+    if (getDataBackend() === 'neon') {
+        const db = await neonReady();
+        const rows = await db`SELECT id, name, description, color, lng, lat FROM landmarks ORDER BY name ASC`;
+        return rows.map((row) => ({
+            id: Number(row.id),
+            name: String(row.name),
+            description: String(row.description || ''),
+            color: String(row.color || ''),
+            lng: Number(row.lng),
+            lat: Number(row.lat),
+        }));
+    }
+    return readLocal().landmarks;
+}
+
+// Merge by name, like territories: re-importing the KMZ moves pins, never duplicates them.
+export async function upsertLandmarks(items: Omit<Landmark, 'id'>[]): Promise<number> {
+    if (getDataBackend() === 'neon') {
+        const db = await neonReady();
+        const existing = await listLandmarks();
+        const byName = new Map(existing.map((landmark) => [landmark.name.toLowerCase(), landmark]));
+        for (const item of items) {
+            const match = byName.get(item.name.toLowerCase());
+            if (match) {
+                await db`UPDATE landmarks SET description = ${item.description}, color = ${item.color}, lng = ${item.lng}, lat = ${item.lat} WHERE id = ${match.id}`;
+            } else {
+                await db`INSERT INTO landmarks (name, description, color, lng, lat) VALUES (${item.name}, ${item.description}, ${item.color}, ${item.lng}, ${item.lat})`;
+            }
+        }
+        return items.length;
+    }
+
+    const state = readLocal();
+    for (const item of items) {
+        const match = state.landmarks.find((landmark) => landmark.name.toLowerCase() === item.name.toLowerCase());
+        if (match) Object.assign(match, item);
+        else {
+            state.landmarks.push({ ...item, id: state.nextLandmarkId });
+            state.nextLandmarkId += 1;
+        }
+    }
+    writeLocal(state);
+    return items.length;
 }

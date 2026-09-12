@@ -42,5 +42,14 @@ export async function ensureNeonAppSchema(sql: NeonClient) {
     await sql`CREATE INDEX IF NOT EXISTS checkouts_territory_idx ON checkouts(territory_id)`;
     await sql`CREATE INDEX IF NOT EXISTS checkouts_user_idx ON checkouts(user_id)`;
 
+    await sql`CREATE TABLE IF NOT EXISTS landmarks (
+        id bigserial PRIMARY KEY,
+        name text NOT NULL,
+        description text NOT NULL DEFAULT '',
+        color text NOT NULL DEFAULT '',
+        lng double precision NOT NULL,
+        lat double precision NOT NULL
+    )`;
+
     ensured = true;
 }
