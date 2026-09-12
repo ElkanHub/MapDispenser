@@ -319,10 +319,9 @@ export async function createCheckout(input: {
     holderName: string;
     assignedBy: string;
 }): Promise<Checkout | { error: string }> {
+    // territories are worked in groups: many holders per territory is fine,
+    // but each person still holds at most one territory at a time
     const active = await getActiveCheckouts();
-    if (active.some((checkout) => checkout.territory_id === input.territoryId)) {
-        return { error: 'This territory is already checked out. Clear it first.' };
-    }
     if (input.userId && active.some((checkout) => checkout.user_id === input.userId)) {
         return { error: 'This person already holds a territory. Clear it first.' };
     }

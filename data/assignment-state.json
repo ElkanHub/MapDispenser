@@ -11,6 +11,14 @@
     {
       "territoryId": 2,
       "assignedAt": "2026-09-12T04:17:38.138Z"
+    },
+    {
+      "territoryId": 1,
+      "assignedAt": "2026-09-12T04:23:46.299Z"
+    },
+    {
+      "territoryId": 1,
+      "assignedAt": "2026-09-12T04:23:46.301Z"
     }
   ]
 }

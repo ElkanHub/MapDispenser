@@ -33,7 +33,7 @@ export default function AdminDeskPage() {
     const dataRef = useRef<AdminOverview | null>(null);
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [showActivity, setShowActivity] = useState(false);
-    const [copied, setCopied] = useState(false);
+    const [copied, setCopied] = useState('');
 
     const reload = async () => {
         try {
@@ -66,25 +66,24 @@ export default function AdminDeskPage() {
     const mapped = data.territories.filter((territory) => territory.geometry);
     const unmapped = data.stats.total - mapped.length;
     const selected = selectedId === null ? null : data.territories.find((territory) => territory.id === selectedId) || null;
-    const selectedLink = selected?.checkout ? tokenLink(selected.checkout.token) : '';
 
-    const copyLink = async () => {
+    const copyLink = async (key: string, link: string) => {
         try {
-            await navigator.clipboard.writeText(selectedLink);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
+            await navigator.clipboard.writeText(link);
+            setCopied(key);
+            setTimeout(() => setCopied(''), 2000);
         } catch {
-            alert(selectedLink);
+            alert(link);
         }
     };
 
-    const clearSelected = async () => {
-        if (!selected?.checkout) return;
-        if (!confirm(`Clear ${selected.territory_name} from ${selected.checkout.holder}? Their link stops working.`)) return;
+    const clearHolder = async (checkout: { id: number; holder: string }) => {
+        if (!selected) return;
+        if (!confirm(`Clear ${selected.territory_name} from ${checkout.holder}? Their link stops working.`)) return;
         const res = await fetch('/api/app/checkouts', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ checkoutId: selected.checkout.id, status: 'returned' }),
+            body: JSON.stringify({ checkoutId: checkout.id, status: 'returned' }),
         });
         if (!res.ok) alert((await res.json()).error || 'Could not clear.');
         await reload();
@@ -205,29 +204,43 @@ export default function AdminDeskPage() {
                             <p className="font-bold text-slate-900">{selected.territory_name}</p>
                             <button type="button" onClick={() => setSelectedId(null)} aria-label="Close" className="ml-auto rounded-full p-1 text-slate-400 hover:text-slate-700"><X className="h-4 w-4" /></button>
                         </div>
-                        <p className="mt-1 text-xs text-slate-500">
-                            {selected.checkout
-                                ? <>{selected.checkout.holder} · out {daysOut(selected.checkout.assigned_at)}</>
-                                : selected.map_description || 'Available'}
-                        </p>
+                        {selected.checkouts.length === 0 && (
+                            <p className="mt-1 text-xs text-slate-500">{selected.map_description || 'Available'}</p>
+                        )}
+
+                        {selected.checkouts.length > 0 && (
+                            <div className="mt-2.5 divide-y divide-slate-100 rounded-lg border border-slate-100 bg-slate-50/60">
+                                {selected.checkouts.map((checkout) => {
+                                    const link = tokenLink(checkout.token);
+                                    const key = `desk-${checkout.id}`;
+                                    return (
+                                        <div key={checkout.id} className="flex items-center gap-2 px-3 py-2">
+                                            <div className="min-w-0 flex-1">
+                                                <p className="truncate text-sm font-semibold text-slate-800">{checkout.holder}</p>
+                                                <p className="text-[11px] text-slate-500">out {daysOut(checkout.assigned_at)}</p>
+                                            </div>
+                                            <button type="button" aria-label={`Copy link for ${checkout.holder}`} onClick={() => copyLink(key, link)} className="rounded-lg border border-slate-200 bg-white p-2 text-slate-600 active:scale-95">
+                                                {copied === key ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                                            </button>
+                                            <button type="button" aria-label={`WhatsApp link for ${checkout.holder}`} onClick={() => shareOnWhatsApp(`Territory ${selected.territory_name}\n${link}`)} className="rounded-lg border border-slate-200 bg-white p-2 text-emerald-700 active:scale-95">
+                                                <MessageCircle className="h-3.5 w-3.5" />
+                                            </button>
+                                            <button type="button" aria-label={`Clear ${checkout.holder}`} onClick={() => clearHolder(checkout)} className="rounded-lg border border-slate-200 bg-white p-2 text-red-600 active:scale-95">
+                                                <X className="h-3.5 w-3.5" />
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
                         <div className="mt-3 flex flex-wrap gap-2">
-                            {selected.status === 'available' && (
+                            {selected.status !== 'inactive' && (
                                 <Link href={`/admin/territories?focus=${selected.id}`}>
-                                    <Button size="sm" className="gap-1.5"><UserPlus className="h-3.5 w-3.5" />Assign</Button>
+                                    <Button size="sm" variant={selected.checkouts.length ? 'outline' : 'default'} className="gap-1.5">
+                                        <UserPlus className="h-3.5 w-3.5" />{selected.checkouts.length ? 'Add people' : 'Assign'}
+                                    </Button>
                                 </Link>
-                            )}
-                            {selected.checkout && (
-                                <>
-                                    <Button size="sm" variant="outline" className="gap-1.5" onClick={copyLink}>
-                                        {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}{copied ? 'Copied' : 'Copy link'}
-                                    </Button>
-                                    <Button size="sm" variant="outline" className="gap-1.5 text-emerald-700" onClick={() => shareOnWhatsApp(`Territory ${selected.territory_name}\n${selectedLink}`)}>
-                                        <MessageCircle className="h-3.5 w-3.5" />WhatsApp
-                                    </Button>
-                                    <Button size="sm" variant="outline" className="gap-1.5 text-red-600" onClick={clearSelected}>
-                                        <X className="h-3.5 w-3.5" />Clear
-                                    </Button>
-                                </>
                             )}
                             <Link href={`/admin/territories?focus=${selected.id}`} className="ml-auto self-center text-xs font-semibold text-indigo-600">Details →</Link>
                         </div>

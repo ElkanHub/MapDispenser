@@ -21,25 +21,25 @@ export async function GET() {
 
     const usersById = new Map(users.map((user) => [user.id, user]));
     const active = checkouts.filter((checkout) => checkout.status === 'active');
-    const activeByTerritory = new Map(active.map((checkout) => [checkout.territory_id, checkout]));
     const territoriesById = new Map(territories.map((territory) => [territory.id, territory]));
 
     const holderName = (checkout: { user_id: number | null; holder_name: string }) =>
         (checkout.user_id && usersById.get(checkout.user_id)?.name) || checkout.holder_name || 'Link holder';
 
+    // group work: a territory can have several holders at once
     const decorated = territories.map((territory) => {
-        const checkout = activeByTerritory.get(territory.id);
+        const held = active.filter((checkout) => checkout.territory_id === territory.id);
         return {
             ...territory,
-            checkout: checkout ? {
+            checkouts: held.map((checkout) => ({
                 id: checkout.id,
                 token: checkout.token,
                 user_id: checkout.user_id,
                 holder: holderName(checkout),
                 assigned_at: checkout.assigned_at,
-            } : null,
+            })),
             // new model wins over the legacy anonymous counter for status display
-            status: !territory.active ? 'inactive' : checkout ? 'assigned' : 'available',
+            status: !territory.active ? 'inactive' : held.length ? 'assigned' : 'available',
         };
     });
 

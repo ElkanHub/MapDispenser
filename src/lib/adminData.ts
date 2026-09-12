@@ -13,13 +13,13 @@ export interface AdminTerritory {
     status: 'available' | 'assigned' | 'inactive';
     lastAssignedAt?: string | null;
     assignmentCount?: number;
-    checkout: {
+    checkouts: {
         id: number;
         token: string;
         user_id: number | null;
         holder: string;
         assigned_at: string;
-    } | null;
+    }[];
 }
 
 export interface AdminUser {

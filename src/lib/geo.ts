@@ -60,6 +60,13 @@ export function pointInGeometry(lng: number, lat: number, geometry: TerritoryGeo
     return false;
 }
 
+// Rough size (bounding-box area) — used only to draw big polygons underneath
+// small ones so taps land on the territory people are aiming at.
+export function geometryBboxArea(geometry: TerritoryGeometry): number {
+    const [[minLng, minLat], [maxLng, maxLat]] = geometryBounds(geometry);
+    return Math.abs((maxLng - minLng) * (maxLat - minLat));
+}
+
 export function isTerritoryGeometry(value: unknown): value is TerritoryGeometry {
     const candidate = value as TerritoryGeometry | null;
     return Boolean(candidate

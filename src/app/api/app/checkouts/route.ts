@@ -15,27 +15,45 @@ export async function POST(request: Request) {
         if (!territory) return NextResponse.json({ error: 'Territory not found.' }, { status: 404 });
         if (!territory.active) return NextResponse.json({ error: 'This territory is inactive. Activate it first.' }, { status: 400 });
 
-        let userId: number | null = null;
-        let holderName = String(body.holderName || '').trim();
-        if (body.userId) {
-            const user = await getUserById(Number(body.userId));
-            if (!user) return NextResponse.json({ error: 'That person no longer has an account.' }, { status: 404 });
-            userId = user.id;
-            holderName = user.name;
+        // groups: one call can put several people on the same territory
+        const userIds: number[] = Array.isArray(body.userIds)
+            ? body.userIds.map(Number)
+            : body.userId ? [Number(body.userId)] : [];
+
+        const created = [];
+        const errors: string[] = [];
+
+        if (userIds.length) {
+            for (const userId of userIds) {
+                const user = await getUserById(userId);
+                if (!user) {
+                    errors.push('One person no longer has an account.');
+                    continue;
+                }
+                const result = await createCheckout({ territoryId, userId: user.id, holderName: user.name, assignedBy: session.name });
+                if ('error' in result) {
+                    errors.push(`${user.name}: ${result.error}`);
+                    continue;
+                }
+                created.push({ ...result, holder_name: user.name });
+                await sendPushToUsers([user.id], {
+                    title: 'Territory assigned to you 🗺️',
+                    body: `${territory.territory_name} is yours — tap to open your map.`,
+                    url: '/home',
+                });
+            }
+        } else {
+            const holderName = String(body.holderName || '').trim();
+            const result = await createCheckout({ territoryId, userId: null, holderName, assignedBy: session.name });
+            if ('error' in result) return NextResponse.json({ error: result.error }, { status: 409 });
+            created.push(result);
         }
 
-        const result = await createCheckout({ territoryId, userId, holderName, assignedBy: session.name });
-        if ('error' in result) return NextResponse.json({ error: result.error }, { status: 409 });
-
-        if (userId) {
-            await sendPushToUsers([userId], {
-                title: 'Territory assigned to you 🗺️',
-                body: `${territory.territory_name} is yours — tap to open your map.`,
-                url: '/home',
-            });
+        if (!created.length) {
+            return NextResponse.json({ error: errors.join(' ') || 'Nobody could be assigned.' }, { status: 409 });
         }
 
-        return NextResponse.json({ success: true, checkout: result });
+        return NextResponse.json({ success: true, checkouts: created, checkout: created[0], errors });
     } catch {
         return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });
     }

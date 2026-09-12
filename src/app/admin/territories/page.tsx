@@ -22,6 +22,11 @@ function shareText(name: string, link: string) {
     return `Territory ${name}\n${link}`;
 }
 
+interface NewLink {
+    holder: string;
+    link: string;
+}
+
 function TerritoriesScreen() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -29,44 +34,56 @@ function TerritoriesScreen() {
     const forId = Number(searchParams.get('for')) || null;
     const [data, setData] = useState<AdminOverview | null>(null);
     const [assignTarget, setAssignTarget] = useState<AdminTerritory | null>(null);
+    const [picked, setPicked] = useState<number[]>([]);
     const [linkName, setLinkName] = useState('');
     const [busy, setBusy] = useState(false);
     const [sheetError, setSheetError] = useState('');
-    const [done, setDone] = useState<{ holder: string; link: string; territory: string } | null>(null);
-    const [copiedId, setCopiedId] = useState<number | null>(null);
+    const [done, setDone] = useState<{ territory: string; links: NewLink[] } | null>(null);
+    const [copiedKey, setCopiedKey] = useState('');
     const focusRef = useRef<HTMLDivElement | null>(null);
 
     const reload = () => fetchOverview().then(setData).catch(() => router.replace('/login'));
     useEffect(() => { reload(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
     useEffect(() => { focusRef.current?.scrollIntoView({ block: 'center' }); }, [data]);
 
-    const copy = async (id: number, link: string) => {
+    const copy = async (key: string, link: string) => {
         try {
             await navigator.clipboard.writeText(link);
-            setCopiedId(id);
-            setTimeout(() => setCopiedId(null), 2000);
+            setCopiedKey(key);
+            setTimeout(() => setCopiedKey(''), 2000);
         } catch {
             alert(link);
         }
     };
 
-    const assign = async (territory: AdminTerritory, userId?: number, holderName?: string) => {
+    const openSheet = (territory: AdminTerritory) => {
+        setAssignTarget(territory);
+        setPicked([]);
+        setDone(null);
+        setSheetError('');
+    };
+
+    const assign = async (territory: AdminTerritory, userIds: number[], holderName?: string) => {
         setBusy(true);
         setSheetError('');
         try {
             const res = await fetch('/api/app/checkouts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ territoryId: territory.id, userId, holderName }),
+                body: JSON.stringify({ territoryId: territory.id, userIds: userIds.length ? userIds : undefined, holderName }),
             });
             const body = await res.json();
             if (!res.ok) throw new Error(body.error || 'Could not assign.');
+            if (body.errors?.length) setSheetError(body.errors.join(' '));
             setDone({
-                holder: body.checkout.holder_name || 'link holder',
-                link: tokenLink(body.checkout.token),
                 territory: territory.territory_name,
+                links: (body.checkouts || []).map((checkout: { holder_name?: string; token: string }) => ({
+                    holder: checkout.holder_name || holderName || 'link holder',
+                    link: tokenLink(checkout.token),
+                })),
             });
             setLinkName('');
+            setPicked([]);
             await reload();
         } catch (error) {
             setSheetError(error instanceof Error ? error.message : 'Could not assign.');
@@ -75,13 +92,12 @@ function TerritoriesScreen() {
         }
     };
 
-    const clear = async (territory: AdminTerritory) => {
-        if (!territory.checkout) return;
-        if (!confirm(`Clear ${territory.territory_name} from ${territory.checkout.holder}? Their link stops working.`)) return;
+    const clear = async (territory: AdminTerritory, checkout: { id: number; holder: string }) => {
+        if (!confirm(`Clear ${territory.territory_name} from ${checkout.holder}? Their link stops working.`)) return;
         const res = await fetch('/api/app/checkouts', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ checkoutId: territory.checkout.id, status: 'returned' }),
+            body: JSON.stringify({ checkoutId: checkout.id, status: 'returned' }),
         });
         if (!res.ok) alert((await res.json()).error || 'Could not clear.');
         await reload();
@@ -114,7 +130,7 @@ function TerritoriesScreen() {
                         <span className="flex h-9 w-9 shrink-0 animate-pulse items-center justify-center rounded-full bg-amber-500 text-white">👋</span>
                         <div className="min-w-0 flex-1">
                             <p className="text-sm font-bold text-amber-900">Choosing a territory for {forUser.name}</p>
-                            <p className="text-xs text-amber-800">Tap Assign on any free territory below.</p>
+                            <p className="text-xs text-amber-800">Tap Assign on any territory below.</p>
                         </div>
                         <button type="button" onClick={() => router.replace('/admin/territories')} className="text-xs font-semibold text-amber-700 underline-offset-2 hover:underline">Cancel</button>
                     </div>
@@ -123,7 +139,6 @@ function TerritoriesScreen() {
                 <div className="flex flex-col gap-2.5">
                     {data.territories.map((territory) => {
                         const chip = CHIP[territory.status];
-                        const link = territory.checkout ? tokenLink(territory.checkout.token) : '';
                         return (
                             <div
                                 key={territory.id}
@@ -135,47 +150,64 @@ function TerritoriesScreen() {
                                     <span className="font-semibold text-slate-900">{territory.territory_name}</span>
                                     {!territory.geometry && <span className="text-[10px] font-medium uppercase text-slate-400">no shape</span>}
                                     <span className="ml-auto text-xs text-slate-500">
-                                        {territory.checkout
-                                            ? <>{territory.checkout.holder} · {daysOut(territory.checkout.assigned_at)}</>
+                                        {territory.checkouts.length
+                                            ? `${territory.checkouts.length} holder${territory.checkouts.length === 1 ? '' : 's'}`
                                             : territory.lastAssignedAt
                                                 ? `last out ${new Date(territory.lastAssignedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`
                                                 : 'never assigned'}
                                     </span>
                                 </div>
 
-                                <div className="mt-2.5 flex flex-wrap gap-2">
-                                    {territory.status === 'available' && (
+                                {territory.checkouts.length > 0 && (
+                                    <div className="mt-2.5 divide-y divide-slate-100 rounded-lg border border-slate-100 bg-slate-50/60">
+                                        {territory.checkouts.map((checkout) => {
+                                            const link = tokenLink(checkout.token);
+                                            const key = `co-${checkout.id}`;
+                                            return (
+                                                <div key={checkout.id} className="flex items-center gap-2 px-3 py-2">
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="truncate text-sm font-semibold text-slate-800">{checkout.holder}</p>
+                                                        <p className="text-[11px] text-slate-500">out {daysOut(checkout.assigned_at)}</p>
+                                                    </div>
+                                                    <button type="button" aria-label={`Copy link for ${checkout.holder}`} onClick={() => copy(key, link)} className="rounded-lg border border-slate-200 bg-white p-2 text-slate-600 active:scale-95">
+                                                        {copiedKey === key ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                                                    </button>
+                                                    <button type="button" aria-label={`WhatsApp link for ${checkout.holder}`} onClick={() => shareOnWhatsApp(shareText(territory.territory_name, link))} className="rounded-lg border border-slate-200 bg-white p-2 text-emerald-700 active:scale-95">
+                                                        <MessageCircle className="h-3.5 w-3.5" />
+                                                    </button>
+                                                    <button type="button" aria-label={`Clear ${checkout.holder}`} onClick={() => clear(territory, checkout)} className="rounded-lg border border-slate-200 bg-white p-2 text-red-600 active:scale-95">
+                                                        <X className="h-3.5 w-3.5" />
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+
+                                {territory.status !== 'inactive' && (
+                                    <div className="mt-2.5 flex flex-wrap gap-2">
                                         <Button
                                             size="sm"
-                                            className={`gap-1.5 ${forUser ? 'bg-amber-600 hover:bg-amber-700' : ''}`}
+                                            variant={territory.checkouts.length ? 'outline' : 'default'}
+                                            className={`gap-1.5 ${forUser ? 'bg-amber-600 text-white hover:bg-amber-700' : ''}`}
                                             disabled={busy}
                                             onClick={() => {
-                                                setDone(null);
-                                                setSheetError('');
-                                                setAssignTarget(territory);
                                                 // direct mode: a person was already chosen on the People tab
-                                                if (forUser) assign(territory, forUser.id);
+                                                if (forUser) {
+                                                    setDone(null);
+                                                    setSheetError('');
+                                                    setAssignTarget(territory);
+                                                    assign(territory, [forUser.id]);
+                                                } else {
+                                                    openSheet(territory);
+                                                }
                                             }}
                                         >
                                             {busy && forUser ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
-                                            {forUser ? `Assign to ${forUser.name.split(' ')[0]}` : 'Assign'}
+                                            {forUser ? `Assign to ${forUser.name.split(' ')[0]}` : territory.checkouts.length ? 'Add people' : 'Assign'}
                                         </Button>
-                                    )}
-                                    {territory.checkout && (
-                                        <>
-                                            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => copy(territory.id, link)}>
-                                                {copiedId === territory.id ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                                                {copiedId === territory.id ? 'Copied' : 'Copy link'}
-                                            </Button>
-                                            <Button size="sm" variant="outline" className="gap-1.5 text-emerald-700" onClick={() => shareOnWhatsApp(shareText(territory.territory_name, link))}>
-                                                <MessageCircle className="h-3.5 w-3.5" />WhatsApp
-                                            </Button>
-                                            <Button size="sm" variant="outline" className="gap-1.5 text-red-600" onClick={() => clear(territory)}>
-                                                <X className="h-3.5 w-3.5" />Clear
-                                            </Button>
-                                        </>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         );
                     })}
@@ -191,48 +223,64 @@ function TerritoriesScreen() {
                         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-200" />
 
                         {done ? (
-                            <div className="space-y-4 text-center">
-                                <Check className="mx-auto h-10 w-10 rounded-full bg-emerald-100 p-2 text-emerald-700" />
-                                <div>
-                                    <p className="font-bold text-slate-900">{done.territory} assigned to {done.holder}</p>
-                                    <p className="mt-1 text-sm text-slate-500">Share the territory link so they can open the map.</p>
+                            <div className="space-y-4">
+                                <div className="text-center">
+                                    <Check className="mx-auto h-10 w-10 rounded-full bg-emerald-100 p-2 text-emerald-700" />
+                                    <p className="mt-2 font-bold text-slate-900">{done.territory} assigned</p>
+                                    <p className="mt-1 text-sm text-slate-500">Share each person&apos;s link so they can open the map.</p>
                                 </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <Button variant="outline" className="gap-2" onClick={() => copy(-1, done.link)}>
-                                        <Copy className="h-4 w-4" />{copiedId === -1 ? 'Copied' : 'Copy link'}
-                                    </Button>
-                                    <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700" onClick={() => shareOnWhatsApp(shareText(done.territory, done.link))}>
-                                        <MessageCircle className="h-4 w-4" />WhatsApp
-                                    </Button>
+                                {sheetError && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{sheetError}</p>}
+                                <div className="divide-y divide-slate-100 rounded-xl border border-slate-200">
+                                    {done.links.map((entry, index) => (
+                                        <div key={index} className="flex items-center gap-2 px-3 py-2.5">
+                                            <p className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800">{entry.holder}</p>
+                                            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => copy(`done-${index}`, entry.link)}>
+                                                {copiedKey === `done-${index}` ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                                                {copiedKey === `done-${index}` ? 'Copied' : 'Copy'}
+                                            </Button>
+                                            <Button size="sm" className="gap-1.5 bg-emerald-600 hover:bg-emerald-700" onClick={() => shareOnWhatsApp(shareText(done.territory, entry.link))}>
+                                                <MessageCircle className="h-3.5 w-3.5" />Send
+                                            </Button>
+                                        </div>
+                                    ))}
                                 </div>
                                 <Button variant="ghost" className="w-full" onClick={() => { setAssignTarget(null); if (forId) router.replace('/admin/territories'); }}>Done</Button>
                             </div>
                         ) : (
                             <>
                                 <h2 className="font-bold text-slate-900">Assign {assignTarget.territory_name} to…</h2>
-                                <p className="mt-0.5 text-sm text-slate-500">Pick a person, or create a link for someone without an account.</p>
+                                <p className="mt-0.5 text-sm text-slate-500">Tick everyone working this territory together, or create a link for someone without an account.</p>
                                 {sheetError && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{sheetError}</p>}
 
                                 <div className="mt-3 divide-y divide-slate-100">
-                                    {freeUsers.map((user) => (
-                                        <div key={user.id} className={`flex items-center gap-3 py-3 ${user.requested_at ? 'rounded-lg bg-amber-50 px-2 -mx-2' : ''}`}>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="flex items-center gap-2 truncate text-sm font-semibold text-slate-900">
-                                                    {user.name}
-                                                    {user.requested_at && <span className="animate-pulse rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white">asking</span>}
-                                                </p>
-                                                <p className="text-xs text-slate-500">no territory</p>
-                                            </div>
-                                            <Button size="sm" disabled={busy} onClick={() => assign(assignTarget, user.id)}>Assign</Button>
-                                        </div>
-                                    ))}
+                                    {freeUsers.map((user) => {
+                                        const checked = picked.includes(user.id);
+                                        return (
+                                            <label key={user.id} className={`flex cursor-pointer items-center gap-3 py-3 ${user.requested_at ? 'rounded-lg bg-amber-50 px-2 -mx-2' : ''}`}>
+                                                <input
+                                                    id={`assign-user-${user.id}`}
+                                                    type="checkbox"
+                                                    checked={checked}
+                                                    onChange={() => setPicked((prev) => checked ? prev.filter((id) => id !== user.id) : [...prev, user.id])}
+                                                    className="h-5 w-5 accent-indigo-600"
+                                                />
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="flex items-center gap-2 truncate text-sm font-semibold text-slate-900">
+                                                        {user.name}
+                                                        {user.requested_at && <span className="animate-pulse rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white">asking</span>}
+                                                    </p>
+                                                    <p className="text-xs text-slate-500">no territory</p>
+                                                </div>
+                                            </label>
+                                        );
+                                    })}
                                     {heldUsers.map((user) => (
                                         <div key={user.id} className="flex items-center gap-3 py-3 opacity-60">
+                                            <span className="h-5 w-5" />
                                             <div className="min-w-0 flex-1">
                                                 <p className="truncate text-sm font-semibold text-slate-900">{user.name}</p>
-                                                <p className="text-xs text-slate-500">holds {user.territory?.name}</p>
+                                                <p className="text-xs text-slate-500">holds {user.territory?.name} — clear first</p>
                                             </div>
-                                            <span className="text-xs text-slate-400">clear first</span>
                                         </div>
                                     ))}
                                     {freeUsers.length === 0 && heldUsers.length === 0 && (
@@ -240,9 +288,16 @@ function TerritoriesScreen() {
                                     )}
                                 </div>
 
+                                {picked.length > 0 && (
+                                    <Button className="mt-3 w-full gap-2 py-5" disabled={busy} onClick={() => assign(assignTarget, picked)}>
+                                        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
+                                        Assign to {picked.length} {picked.length === 1 ? 'person' : 'people'}
+                                    </Button>
+                                )}
+
                                 <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
                                     <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-800"><Link2 className="h-4 w-4 text-indigo-500" />Magic link only</p>
-                                    <p className="mt-0.5 text-xs text-slate-500">Creates a shareable link — no account needed. The link dies when you clear the territory.</p>
+                                    <p className="mt-0.5 text-xs text-slate-500">Creates a shareable link — no account needed. The link dies when that holder is cleared.</p>
                                     <div className="mt-2.5 flex gap-2">
                                         <input
                                             id="magic-link-name"
@@ -251,7 +306,7 @@ function TerritoriesScreen() {
                                             placeholder="Holder's name"
                                             className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500"
                                         />
-                                        <Button size="sm" disabled={busy || !linkName.trim()} onClick={() => assign(assignTarget, undefined, linkName.trim())}>
+                                        <Button size="sm" disabled={busy || !linkName.trim()} onClick={() => assign(assignTarget, [], linkName.trim())}>
                                             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Create'}
                                         </Button>
                                     </div>

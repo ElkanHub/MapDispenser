@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type * as Leaflet from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-import { geometryBounds, pointInGeometry, type TerritoryGeometry } from '@/lib/geo';
+import { geometryBboxArea, geometryBounds, pointInGeometry, type TerritoryGeometry } from '@/lib/geo';
 
 export interface MapShape {
     id: number;
@@ -59,9 +59,11 @@ function shapeStyle(shape: MapShape, highlightId: number | undefined, colorBy: '
         const status = shape.status || 'available';
         return {
             stroke: STATUS_COLORS[status],
+            // KML colour when the file has one; otherwise a barely-there grey
+            // so the green/amber status outline stays the loudest signal
             fill: shape.color || NEUTRAL_COLOR,
             weight: 3,
-            fillOpacity: status === 'inactive' ? 0.08 : 0.22,
+            fillOpacity: status === 'inactive' ? 0.04 : shape.color ? 0.18 : 0.05,
             dashArray: status === 'inactive' ? '6 6' : undefined,
         };
     }
@@ -196,7 +198,10 @@ export default function LiveMap({
             shapeLayerRef.current = layer;
 
             let bounds: Leaflet.LatLngBounds | null = null;
-            for (const shape of shapes) {
+            // big polygons (e.g. a whole-congregation boundary) go underneath,
+            // so taps and labels always belong to the small territory on top
+            const ordered = [...shapes].sort((a, b) => geometryBboxArea(b.geometry) - geometryBboxArea(a.geometry));
+            for (const shape of ordered) {
                 const isHighlight = shape.id === highlightId;
                 const style = shapeStyle(shape, highlightId, colorBy);
                 const polygon = L.polygon(toLatLngs(shape.geometry), {
