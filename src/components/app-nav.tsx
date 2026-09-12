@@ -27,6 +27,14 @@ export function RoleNav() {
     return role === 'publisher' ? <PublisherNav /> : <AdminNav />;
 }
 
+interface Tab {
+    href: string;
+    label: string;
+    icon: typeof Home;
+    exact?: boolean;
+    also?: string[]; // extra paths that light this tab up
+}
+
 function NavTab({ href, label, icon: Icon, active }: { href: string; label: string; icon: typeof Home; active: boolean }) {
     // M3 bottom bar: the active destination is a tonal pill behind the icon,
     // with the label always visible underneath.
@@ -43,16 +51,19 @@ function NavTab({ href, label, icon: Icon, active }: { href: string; label: stri
     );
 }
 
-function NavBar({ tabs }: { tabs: { href: string; label: string; icon: typeof Home; exact?: boolean }[] }) {
+function NavBar({ tabs }: { tabs: Tab[] }) {
     const pathname = usePathname();
     return (
         <nav className="fixed inset-x-0 bottom-0 z-40 bg-slate-100/95 backdrop-blur">
-            <div className="mx-auto flex max-w-md items-stretch gap-1 px-2 pb-[max(env(safe-area-inset-bottom),6px)] pt-1.5">
+            <div className="mx-auto flex max-w-md items-stretch gap-0.5 px-1 pb-[max(env(safe-area-inset-bottom),6px)] pt-1.5">
                 {tabs.map((tab) => (
                     <NavTab
                         key={tab.href}
-                        {...tab}
-                        active={tab.exact ? pathname === tab.href : pathname.startsWith(tab.href)}
+                        href={tab.href}
+                        label={tab.label}
+                        icon={tab.icon}
+                        active={(tab.exact ? pathname === tab.href : pathname.startsWith(tab.href))
+                            || Boolean(tab.also?.some((path) => pathname.startsWith(path)))}
                     />
                 ))}
             </div>
@@ -68,11 +79,13 @@ export function PublisherNav() {
 }
 
 export function AdminNav() {
+    // team members work territories too: "Mine" is their own assignment + live map
     return <NavBar tabs={[
         { href: '/admin', label: 'Desk', icon: LayoutDashboard, exact: true },
         { href: '/admin/territories', label: 'Territories', icon: MapPinned },
         { href: '/admin/people', label: 'People', icon: Users },
         { href: '/admin/import', label: 'Import', icon: Upload },
+        { href: '/home', label: 'Mine', icon: Map, also: ['/map'] },
         { href: '/admin/tools', label: 'Tools', icon: Wrench },
     ]} />;
 }
