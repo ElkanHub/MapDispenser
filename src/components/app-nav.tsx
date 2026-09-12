@@ -1,8 +1,31 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Home, Map, LayoutDashboard, MapPinned, Users, Upload, Wrench, LogOut } from 'lucide-react';
+
+// One shared lookup per page load: every nav/screen asking for the role reuses it.
+let rolePromise: Promise<string | null> | null = null;
+
+export function useRole(): string | null | undefined {
+    const [role, setRole] = useState<string | null | undefined>(undefined);
+    useEffect(() => {
+        rolePromise = rolePromise || fetch('/api/app/me')
+            .then((res) => (res.ok ? res.json() : null))
+            .then((body) => (body ? String(body.user.role) : null))
+            .catch(() => null);
+        rolePromise.then(setRole);
+    }, []);
+    return role;
+}
+
+// Bottom navigation for whoever is signed in — nothing for anonymous link holders.
+export function RoleNav() {
+    const role = useRole();
+    if (!role) return null;
+    return role === 'publisher' ? <PublisherNav /> : <AdminNav />;
+}
 
 function NavTab({ href, label, icon: Icon, active }: { href: string; label: string; icon: typeof Home; active: boolean }) {
     return (

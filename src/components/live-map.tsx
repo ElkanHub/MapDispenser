@@ -49,10 +49,24 @@ const NEUTRAL_COLOR = '#64748b';
 const BASEMAP_KEY = 'md-basemap';
 const LABELS_KEY = 'md-labels';
 
-function shapeColor(shape: MapShape, highlightId: number | undefined, colorBy: 'status' | 'highlight') {
-    if (shape.id === highlightId) return HIGHLIGHT_COLOR;
-    if (colorBy === 'status') return STATUS_COLORS[shape.status || 'available'];
-    return shape.color || NEUTRAL_COLOR;
+// Fill keeps the territory's own KML color (that's what separates neighbors);
+// in status mode the border carries free/out/inactive so both read at once.
+function shapeStyle(shape: MapShape, highlightId: number | undefined, colorBy: 'status' | 'highlight') {
+    if (shape.id === highlightId) {
+        return { stroke: HIGHLIGHT_COLOR, fill: HIGHLIGHT_COLOR, weight: 3, fillOpacity: 0.25, dashArray: undefined as string | undefined };
+    }
+    if (colorBy === 'status') {
+        const status = shape.status || 'available';
+        return {
+            stroke: STATUS_COLORS[status],
+            fill: shape.color || NEUTRAL_COLOR,
+            weight: 3,
+            fillOpacity: status === 'inactive' ? 0.08 : 0.22,
+            dashArray: status === 'inactive' ? '6 6' : undefined,
+        };
+    }
+    const own = shape.color || NEUTRAL_COLOR;
+    return { stroke: own, fill: own, weight: 2, fillOpacity: 0.15, dashArray: undefined };
 }
 
 // GeoJSON is [lng, lat]; Leaflet wants [lat, lng].
@@ -184,12 +198,13 @@ export default function LiveMap({
             let bounds: Leaflet.LatLngBounds | null = null;
             for (const shape of shapes) {
                 const isHighlight = shape.id === highlightId;
-                const color = shapeColor(shape, highlightId, colorBy);
+                const style = shapeStyle(shape, highlightId, colorBy);
                 const polygon = L.polygon(toLatLngs(shape.geometry), {
-                    color,
-                    weight: isHighlight ? 3 : 2,
-                    fillColor: color,
-                    fillOpacity: isHighlight ? 0.25 : 0.15,
+                    color: style.stroke,
+                    weight: style.weight,
+                    fillColor: style.fill,
+                    fillOpacity: style.fillOpacity,
+                    dashArray: style.dashArray,
                     className: isHighlight ? 'territory-pulse' : '',
                 }).addTo(layer);
 

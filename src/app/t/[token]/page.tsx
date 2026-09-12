@@ -3,6 +3,7 @@
 import { use, useEffect, useState } from 'react';
 import { Link2Off, Loader2 } from 'lucide-react';
 
+import { RoleNav } from '@/components/app-nav';
 import TerritoryPanel, { type PanelTerritory } from '@/components/territory-panel';
 
 interface TokenData {
@@ -46,7 +47,7 @@ export default function TokenViewPage({ params }: { params: Promise<{ token: str
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 p-4 sm:p-6">
+        <div className="min-h-screen bg-slate-50 p-4 pb-24 sm:p-6 sm:pb-24">
             <div className="mx-auto w-full max-w-md py-4">
                 <TerritoryPanel
                     territory={data.territory}
@@ -58,6 +59,7 @@ export default function TokenViewPage({ params }: { params: Promise<{ token: str
                     Keep this link — it works until the territory is returned.
                 </p>
             </div>
+            <RoleNav />
         </div>
     );
 }

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Clock, Hand, Info, Loader2, MapPinned, ShieldCheck } from 'lucide-react';
 
-import { PublisherNav, SignOutButton } from '@/components/app-nav';
+import { RoleNav, SignOutButton } from '@/components/app-nav';
 import TerritoryPanel, { type PanelTerritory } from '@/components/territory-panel';
 import { Button } from '@/components/ui/button';
 
@@ -157,7 +157,7 @@ export default function HomePage() {
                 )}
             </main>
 
-            <PublisherNav />
+            <RoleNav />
         </div>
     );
 }

@@ -156,6 +156,13 @@ export default function AdminDeskPage() {
                 </div>
             </div>
 
+            {/* legend: outline = status, fill keeps each territory's own map colour */}
+            <div className="pointer-events-none absolute bottom-24 left-3 z-[600] flex flex-col gap-1 rounded-xl border border-slate-200 bg-white/95 p-2 text-[11px] font-medium text-slate-600 shadow backdrop-blur">
+                <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm border-2 border-emerald-600 bg-emerald-600/15" />Free (green outline)</span>
+                <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm border-2 border-amber-500 bg-amber-500/15" />Assigned (amber outline)</span>
+                <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm border-2 border-dashed border-slate-400 bg-slate-400/10" />Inactive</span>
+            </div>
+
             {/* activity toggle, above the tab bar */}
             <button
                 type="button"

@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, LocateFixed, Navigation } from 'lucide-react';
 
+import { RoleNav, useRole } from '@/components/app-nav';
 import LiveMap, { type MapLandmark } from '@/components/live-map';
 import { navigateUrl, type PanelTerritory } from '@/components/territory-panel';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,8 @@ export default function LiveMapScreen({ territory, backHref, landmarks = [] }: {
     const navUrl = navigateUrl(territory);
     const controlsRef = useRef<{ locate: () => void } | null>(null);
     const [hasControls, setHasControls] = useState(false);
+    // signed-in users keep their navigation even on the full-screen map
+    const role = useRole();
 
     return (
         <div className="fixed inset-0 bg-slate-100">
@@ -42,7 +45,7 @@ export default function LiveMapScreen({ territory, backHref, landmarks = [] }: {
             </Link>
 
             {/* compact floating chips — the map stays visible and touchable around them */}
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[600] p-3 pb-[max(env(safe-area-inset-bottom),12px)]">
+            <div className={`pointer-events-none absolute inset-x-0 z-[600] p-3 ${role ? 'bottom-16' : 'bottom-0 pb-[max(env(safe-area-inset-bottom),12px)]'}`}>
                 <div className="mx-auto flex w-full max-w-md flex-col items-center gap-2">
                     <span className="pointer-events-auto rounded-full border border-slate-200 bg-white/95 px-4 py-1.5 text-xs font-bold text-slate-900 shadow-lg backdrop-blur">
                         {territory.territory_name}
@@ -70,6 +73,8 @@ export default function LiveMapScreen({ territory, backHref, landmarks = [] }: {
                     </div>
                 </div>
             </div>
+
+            <RoleNav />
         </div>
     );
 }
