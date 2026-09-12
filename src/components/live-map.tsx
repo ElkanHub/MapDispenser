@@ -375,7 +375,8 @@ export default function LiveMap({
                         </div>
                     )}
                     {locationError && (
-                        <div className="pointer-events-none absolute bottom-20 left-1/2 z-[500] max-w-[90%] -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-900/85 px-4 py-2 text-center text-xs text-white">
+                        // sits under the inside/outside pill, well clear of the bottom action buttons
+                        <div className="pointer-events-none absolute left-1/2 top-[calc(max(env(safe-area-inset-top),12px)+52px)] z-[700] max-w-[90%] -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-900/85 px-4 py-2 text-center text-xs text-white shadow-md">
                             {locationError}
                         </div>
                     )}
