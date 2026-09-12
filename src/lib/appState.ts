@@ -98,7 +98,8 @@ export function stripHash(user: AppUser): SafeUser {
 
 export async function getSettings(): Promise<CongregationSettings | null> {
     if (getDataBackend() === 'neon') {
-        const rows = await (await neonReady())`SELECT congregation_name, join_code, team_code FROM app_settings WHERE id = 1`;
+        const db = await neonReady();
+        const rows = await db`SELECT congregation_name, join_code, team_code FROM app_settings WHERE id = 1`;
         return rows.length ? (rows[0] as unknown as CongregationSettings) : null;
     }
     return readLocal().settings;
@@ -106,7 +107,8 @@ export async function getSettings(): Promise<CongregationSettings | null> {
 
 export async function saveSettings(settings: CongregationSettings) {
     if (getDataBackend() === 'neon') {
-        await (await neonReady())`
+        const db = await neonReady();
+        await db`
             INSERT INTO app_settings (id, congregation_name, join_code, team_code)
             VALUES (1, ${settings.congregation_name}, ${settings.join_code}, ${settings.team_code})
             ON CONFLICT (id) DO UPDATE SET
@@ -124,7 +126,8 @@ export async function saveSettings(settings: CongregationSettings) {
 
 export async function countUsers(): Promise<number> {
     if (getDataBackend() === 'neon') {
-        const rows = await (await neonReady())`SELECT count(*)::int AS count FROM app_users`;
+        const db = await neonReady();
+        const rows = await db`SELECT count(*)::int AS count FROM app_users`;
         return Number(rows[0]?.count || 0);
     }
     return readLocal().users.length;
@@ -133,7 +136,8 @@ export async function countUsers(): Promise<number> {
 export async function findUserByEmail(email: string): Promise<AppUser | null> {
     const normalized = email.trim().toLowerCase();
     if (getDataBackend() === 'neon') {
-        const rows = await (await neonReady())`SELECT id, name, email, role, status, created_at::text, password_hash FROM app_users WHERE email = ${normalized}`;
+        const db = await neonReady();
+        const rows = await db`SELECT id, name, email, role, status, created_at::text, password_hash FROM app_users WHERE email = ${normalized}`;
         return rows.length ? normalizeUser(rows[0]) : null;
     }
     return readLocal().users.find((user) => user.email === normalized) || null;
@@ -141,7 +145,8 @@ export async function findUserByEmail(email: string): Promise<AppUser | null> {
 
 export async function getUserById(id: number): Promise<AppUser | null> {
     if (getDataBackend() === 'neon') {
-        const rows = await (await neonReady())`SELECT id, name, email, role, status, created_at::text, password_hash FROM app_users WHERE id = ${id}`;
+        const db = await neonReady();
+        const rows = await db`SELECT id, name, email, role, status, created_at::text, password_hash FROM app_users WHERE id = ${id}`;
         return rows.length ? normalizeUser(rows[0]) : null;
     }
     return readLocal().users.find((user) => user.id === id) || null;
@@ -163,7 +168,8 @@ export async function createUser(input: { name: string; email: string; password_
     const email = input.email.trim().toLowerCase();
 
     if (getDataBackend() === 'neon') {
-        const rows = await (await neonReady())`
+        const db = await neonReady();
+        const rows = await db`
             INSERT INTO app_users (name, email, password_hash, role, status)
             VALUES (${input.name.trim()}, ${email}, ${input.password_hash}, ${input.role}, ${input.status})
             RETURNING id, name, email, role, status, created_at::text, password_hash`;
@@ -188,7 +194,8 @@ export async function createUser(input: { name: string; email: string; password_
 
 export async function listUsers(): Promise<SafeUser[]> {
     if (getDataBackend() === 'neon') {
-        const rows = await (await neonReady())`SELECT id, name, email, role, status, created_at::text FROM app_users ORDER BY created_at ASC`;
+        const db = await neonReady();
+        const rows = await db`SELECT id, name, email, role, status, created_at::text FROM app_users ORDER BY created_at ASC`;
         return rows.map((row) => {
             const { id, name, email, role, status, created_at } = normalizeUser({ ...row, password_hash: '' });
             return { id, name, email, role, status, created_at };
@@ -221,7 +228,8 @@ export async function updateUser(id: number, changes: Partial<Pick<AppUser, 'rol
 
 export async function deleteUser(id: number): Promise<boolean> {
     if (getDataBackend() === 'neon') {
-        const rows = await (await neonReady())`DELETE FROM app_users WHERE id = ${id} RETURNING id`;
+        const db = await neonReady();
+        const rows = await db`DELETE FROM app_users WHERE id = ${id} RETURNING id`;
         return rows.length > 0;
     }
     const state = readLocal();
@@ -252,7 +260,8 @@ function normalizeCheckout(row: Record<string, unknown>): Checkout {
 
 export async function listCheckouts(): Promise<Checkout[]> {
     if (getDataBackend() === 'neon') {
-        const rows = await (await neonReady())`
+        const db = await neonReady();
+        const rows = await db`
             SELECT id, territory_id, user_id, holder_name, token, status, assigned_by, assigned_at::text, ended_at::text
             FROM checkouts ORDER BY assigned_at DESC`;
         return rows.map(normalizeCheckout);
@@ -290,7 +299,8 @@ export async function createCheckout(input: {
 
     let checkout: Checkout;
     if (getDataBackend() === 'neon') {
-        const rows = await (await neonReady())`
+        const db = await neonReady();
+        const rows = await db`
             INSERT INTO checkouts (territory_id, user_id, holder_name, token, assigned_by)
             VALUES (${input.territoryId}, ${input.userId || null}, ${input.holderName}, ${token}, ${input.assignedBy})
             RETURNING id, territory_id, user_id, holder_name, token, status, assigned_by, assigned_at::text, ended_at::text`;
@@ -320,7 +330,8 @@ export async function createCheckout(input: {
 
 export async function endCheckout(checkoutId: number, status: 'returned' | 'cleared'): Promise<boolean> {
     if (getDataBackend() === 'neon') {
-        const rows = await (await neonReady())`
+        const db = await neonReady();
+        const rows = await db`
             UPDATE checkouts SET status = ${status}, ended_at = now()
             WHERE id = ${checkoutId} AND status = 'active' RETURNING id`;
         return rows.length > 0;
