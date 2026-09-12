@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
+import { requireSession } from '@/lib/auth';
 import { assignSpecificTerritory } from '@/lib/dispenserState';
 
 export async function POST(request: Request) {
+    const session = await requireSession(true);
+    if (!session) return NextResponse.json({ error: 'Not allowed.' }, { status: 401 });
+
     try {
         const body = await request.json();
         const { id } = body;

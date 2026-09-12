@@ -13,8 +13,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Territory Dispenser",
+  title: "MapDispenser",
   description: "Assign, track, and manage map territories.",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#f8fafc",
 };
 
 export default function RootLayout({

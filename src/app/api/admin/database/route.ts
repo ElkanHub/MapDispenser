@@ -1,14 +1,21 @@
 import { NextResponse } from 'next/server';
+import { requireSession } from '@/lib/auth';
 import { getDataBackend, setDataBackend, getTerritories, type DataBackend } from '@/lib/dispenserState';
 
 // always read the live backend, never a cached render
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+    const session = await requireSession(true);
+    if (!session) return NextResponse.json({ error: 'Not allowed.' }, { status: 401 });
+
     return NextResponse.json({ backend: getDataBackend() });
 }
 
 export async function POST(request: Request) {
+    const session = await requireSession(true);
+    if (!session) return NextResponse.json({ error: 'Not allowed.' }, { status: 401 });
+
     const body = await request.json().catch(() => null);
     const backend = body?.backend as DataBackend | undefined;
 

@@ -1,15 +1,22 @@
 import { NextResponse } from 'next/server';
+import { requireSession } from '@/lib/auth';
 import { getTerritories, toggleTerritoryActive, setTerritoriesActive, uploadTerritories } from '@/lib/dispenserState';
 
 // always read the live backend, never a cached render
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+    const session = await requireSession(true);
+    if (!session) return NextResponse.json({ error: 'Not allowed.' }, { status: 401 });
+
     const territories = await getTerritories();
     return NextResponse.json(territories);
 }
 
 export async function PATCH(request: Request) {
+    const session = await requireSession(true);
+    if (!session) return NextResponse.json({ error: 'Not allowed.' }, { status: 401 });
+
     try {
         const body = await request.json();
 
@@ -52,6 +59,9 @@ export async function PATCH(request: Request) {
 }
 
 export async function POST(request: Request) {
+    const session = await requireSession(true);
+    if (!session) return NextResponse.json({ error: 'Not allowed.' }, { status: 401 });
+
     try {
         const body = await request.json();
         const territories = Array.isArray(body) ? body : body.territories;

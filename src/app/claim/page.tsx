@@ -18,7 +18,8 @@ export default function ClaimPage() {
 
                 if (response.ok) {
                     const data = await response.json();
-                    router.replace(`/view/${data.territory.id}`);
+                    // magic-link view: shows the live map and stays valid for the whole assignment
+                    router.replace(data.token ? `/t/${data.token}` : `/view/${data.territory.id}`);
                 } else {
                     const data = await response.json();
                     if (data.exhausted) {

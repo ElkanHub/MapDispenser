@@ -3,6 +3,9 @@ import path from 'path';
 
 import { neon } from '@neondatabase/serverless';
 
+import { isTerritoryGeometry, type TerritoryGeometry } from './geo';
+import { ensureNeonAppSchema } from './schema';
+
 export type DataBackend = 'local' | 'neon';
 export type TerritoryStatus = 'inactive' | 'available' | 'assigned';
 
@@ -13,6 +16,8 @@ export interface Territory {
     map_image_url: string;
     map_description: string;
     active: boolean;
+    geometry?: TerritoryGeometry | null;
+    color?: string;
     isAssigned?: boolean;
     assignmentCount?: number;
     lastAssignedAt?: string | null;
@@ -53,6 +58,8 @@ interface RawTerritory {
     map_image_url?: string;
     map_description?: string;
     active?: boolean;
+    geometry?: unknown;
+    color?: string;
     title?: string;
     message?: string;
 }
@@ -156,6 +163,8 @@ function getLocalTerritoriesBase(): Territory[] {
         map_image_url: String(item.map_image_url || ''),
         map_description: String(item.map_description || ''),
         active: Boolean(item.active),
+        geometry: isTerritoryGeometry(item.geometry) ? item.geometry : null,
+        color: String(item.color || ''),
     }));
 }
 
@@ -180,6 +189,8 @@ async function getNeonTerritories(): Promise<Territory[]> {
             map_image_url: territory.map_image_url,
             map_description: territory.map_description,
             active: Boolean(territory.active),
+            geometry: isTerritoryGeometry(territory.geometry) ? territory.geometry : null,
+            color: String(territory.color || ''),
         })),
         assignments.map((assignment) => ({
             territoryId: Number(assignment.territory_id),
@@ -344,20 +355,25 @@ export async function uploadTerritories(territories: Territory[]) {
         map_image_url: String(territory.map_image_url || '').trim(),
         map_description: String(territory.map_description || '').trim(),
         active: Boolean(territory.active),
+        geometry: isTerritoryGeometry(territory.geometry) ? territory.geometry : null,
+        color: String(territory.color || ''),
     })).filter((territory) => territory.id && territory.territory_name);
 
     if (getDataBackend() === 'neon') {
+        await ensureNeonAppSchema(sql());
         // ponytail: one statement, json_to_recordset expands the array server-side
         await sql()`
-            INSERT INTO territories (id, territory_name, map_link, map_image_url, map_description, active)
+            INSERT INTO territories (id, territory_name, map_link, map_image_url, map_description, active, geometry, color)
             SELECT * FROM json_to_recordset(${JSON.stringify(normalized)}::json)
-                AS t(id int, territory_name text, map_link text, map_image_url text, map_description text, active boolean)
+                AS t(id int, territory_name text, map_link text, map_image_url text, map_description text, active boolean, geometry jsonb, color text)
             ON CONFLICT (id) DO UPDATE SET
                 territory_name = EXCLUDED.territory_name,
                 map_link = EXCLUDED.map_link,
                 map_image_url = EXCLUDED.map_image_url,
                 map_description = EXCLUDED.map_description,
-                active = EXCLUDED.active`;
+                active = EXCLUDED.active,
+                geometry = COALESCE(EXCLUDED.geometry, territories.geometry),
+                color = CASE WHEN EXCLUDED.color = '' THEN territories.color ELSE EXCLUDED.color END`;
         return normalized.length;
     }
 
@@ -365,9 +381,36 @@ export async function uploadTerritories(territories: Territory[]) {
     const merged = getLocalTerritoriesBase();
     for (const territory of normalized) {
         const index = merged.findIndex((item) => item.id === territory.id);
-        if (index === -1) merged.push(territory);
-        else merged[index] = territory;
+        if (index === -1) {
+            merged.push(territory);
+        } else {
+            // a JSON re-upload without shapes must not wipe imported geometry
+            merged[index] = {
+                ...territory,
+                geometry: territory.geometry || merged[index].geometry,
+                color: territory.color || merged[index].color,
+            };
+        }
     }
     persistLocalTerritories(merged.sort((a, b) => a.id - b.id));
     return normalized.length;
+}
+
+// KMZ import: refresh boundary + color, leave name/description/image/history alone.
+export async function setTerritoryGeometry(id: number, geometry: TerritoryGeometry, color: string): Promise<boolean> {
+    if (getDataBackend() === 'neon') {
+        await ensureNeonAppSchema(sql());
+        const rows = await sql()`
+            UPDATE territories SET geometry = ${JSON.stringify(geometry)}::jsonb, color = ${color}
+            WHERE id = ${id} RETURNING id`;
+        return rows.length > 0;
+    }
+
+    const territories = getLocalTerritoriesBase();
+    const territory = territories.find((item) => item.id === id);
+    if (!territory) return false;
+    territory.geometry = geometry;
+    territory.color = color;
+    persistLocalTerritories(territories);
+    return true;
 }

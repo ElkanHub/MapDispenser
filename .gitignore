@@ -42,3 +42,8 @@ next-env.d.ts
 
 # runtime backend choice, per environment
 data/backend.json
+
+# per-deployment app data (accounts, sessions secret)
+/data/app-state.json
+/data/auth-secret
+/data/backend.json

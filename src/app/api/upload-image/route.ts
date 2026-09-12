@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
+import { requireSession } from '@/lib/auth';
 import fs from 'fs/promises';
 import path from 'path';
 
 // ponytail: writes into public/maps — fine for a self-hosted/local admin.
 // Move to object storage (S3/Vercel Blob) if this ever runs on a read-only serverless FS.
 export async function POST(request: Request) {
+    const session = await requireSession(true);
+    if (!session) return NextResponse.json({ error: 'Not allowed.' }, { status: 401 });
+
     const form = await request.formData();
     const file = form.get('file');
 

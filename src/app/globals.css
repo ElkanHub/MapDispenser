@@ -120,7 +120,39 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    /* the app is deliberately light-mode only */
+    color-scheme: light;
+  }
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Assigned-territory pulse on the live map (Leaflet renders polygons as SVG paths) */
+@keyframes territory-pulse {
+  0%, 100% { fill-opacity: 0.18; stroke-opacity: 0.85; }
+  50% { fill-opacity: 0.42; stroke-opacity: 1; }
+}
+.territory-pulse {
+  animation: territory-pulse 1.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .territory-pulse { animation: none; }
+}
+
+.territory-label {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(100, 116, 139, 0.35);
+  border-radius: 999px;
+  box-shadow: none;
+  color: #1e293b;
+  font-weight: 600;
+  font-size: 11px;
+  padding: 2px 8px;
+}
+.territory-label::before { display: none; }
+
+.location-dot {
+  filter: drop-shadow(0 1px 3px rgba(37, 99, 235, 0.5));
 }

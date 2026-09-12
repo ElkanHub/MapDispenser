@@ -1,77 +1,56 @@
-# Territory Dispenser
+# MapDispenser
 
-A Next.js app for distributing map territories by QR code, tracking assignment history, and managing territory availability from an admin dashboard.
+A Next.js app for a congregation's territory work: import territory polygons from a Google Earth KMZ, see them on a live map, assign territories to people (or hand out magic links), and track who holds what.
 
-## What The App Does
+## How it fits together
 
-- `/` shows the public QR dispenser and live assignment totals.
-- `/claim` assigns the next active, unassigned territory and redirects to its map page.
-- `/view/[id]` shows the assigned territory, map image, download action, sharing, and Google Maps link.
-- `/admin` is the operations dashboard for status, assignment counts, backend switching, territory uploads, group activation, resets, previews, and share links.
+- **One congregation per deployment.** The first account created becomes the **territory servant** and sets the congregation name plus two codes.
+- **Join code** — anyone signing up enters it to join as a **publisher** (pending until approved).
+- **Territory-team code** — entered under "Part of the territory team?" during signup; grants the admin screens immediately.
+- **Assignments** are checkouts: one active holder per territory, one territory per person. Every checkout gets a **magic link** (`/t/<token>`) that works without an account and stops working when the territory is cleared.
 
-## Data Model
+## Screens
 
-Territory records use this shape:
+| Route | Who | What |
+| --- | --- | --- |
+| `/login`, `/signup` | everyone | Email + password; signup binds via the codes. First-ever signup runs congregation setup. |
+| `/home` | publisher | Current assignment, description, offline map image, live-map + navigate buttons. |
+| `/map` | publisher | Full-screen live map: pulsing boundary, live GPS dot, inside/outside banner, Google Maps navigation handoff. |
+| `/t/<token>` (+ `/map`) | link holders | Same territory view + live map, no account needed. |
+| `/admin` | team/servant | Desk: status tiles, whole-congregation map colored by status, recent activity. |
+| `/admin/territories` | team/servant | Assign (person or magic link), copy/WhatsApp the link, clear. |
+| `/admin/people` | team/servant | Codes (share/rotate), approve signups, roles, password resets, remove. |
+| `/admin/import` | team/servant | Upload the Google Earth KMZ/KML → preview matched placemarks → import. |
+| `/admin/tools` | team/servant | The legacy dashboard: activate/deactivate, JSON upload, backend switch, card editing. |
+| `/dispenser` + `/claim` | public | QR self-serve: scanning checks out the next free territory as a magic link. |
 
-```json
-{
-  "id": 1,
-  "territory_name": "KHT 1",
-  "map_link": "https://maps.app.goo.gl/example",
-  "map_image_url": "/maps/kht1.png",
-  "map_description": "Description of the territory.",
-  "active": true
-}
-```
+## KMZ import rules
 
-Assignment history is stored separately so the app can report:
+Placemarks match territories **by name** (case-insensitive) — name your Google Earth polygons exactly like the territory names (`KHT 1`, …). Matched placemarks update the boundary and color in place; unmatched ones create new territories; re-importing never touches assignment history. Points/lines are skipped.
 
-- whether a territory is `available`, `assigned`, or `inactive`
-- how many times each territory has been assigned
-- when it was last assigned
-- total assignment events across all territories
+## Data model
 
-## Local Database Mode
+`territories` keep the original card fields (`map_link`, `map_image_url`, `map_description`) — the image doubles as the offline copy — plus `geometry` (GeoJSON, from the KMZ) and `color`. The account layer adds `app_settings` (congregation + codes), `app_users`, and `checkouts` (holder, token, status, timestamps). The legacy anonymous `assignments` table still records every checkout so historical counters keep working.
 
-Local mode is the default.
+## Backends
 
-- Territory definitions live in `data/territories.json`.
-- Assignment history lives in `data/assignment-state.json`.
-- Admin uploads replace the territory list in `data/territories.json`.
-- Reset Assignments clears `data/assignment-state.json`.
+- **Local (default):** everything in `data/*.json`. `data/app-state.json` (accounts) and `data/auth-secret` are per-deployment and git-ignored. Fine for a single self-hosted box; not for serverless.
+- **Neon Postgres:** set `DATABASE_URL` (and switch in `/admin/tools`, or set `TERRITORY_DATA_BACKEND=neon`). The account/geometry schema is created automatically on first use; `node scripts/init-neon.mjs` seeds the base territory tables from `data/territories.json`.
 
-This mode works without external services, but file writes are best for local/small deployments. Serverless hosts may not preserve local file changes between deployments.
-
-## Supabase Mode
-
-Supabase mode uses the Supabase REST API directly from server routes. No client-side Supabase key is required for normal app usage.
-
-1. Create a Supabase project.
-2. Run `docs/supabase-schema.sql` in the Supabase SQL editor.
-3. Add these environment variables:
+Environment variables:
 
 ```bash
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-TERRITORY_DATA_BACKEND=supabase
+DATABASE_URL=postgres://...        # Neon mode
+TERRITORY_DATA_BACKEND=neon        # optional; local is the default
+AUTH_SECRET=some-long-random-text  # required on hosts with a read-only filesystem
 ```
 
-`TERRITORY_DATA_BACKEND` is optional. If omitted, the app starts in local mode and the admin dashboard can switch to Supabase at runtime.
+## First-run checklist
 
-The admin dashboard upload tool can seed Supabase with the same JSON format used by `data/territories.json`.
-
-## API Routes
-
-- `GET /api/stats` returns dashboard totals and backend status.
-- `GET /api/territories` returns decorated territories with assignment status and counts.
-- `PATCH /api/territories` toggles one territory or a group of territories.
-- `POST /api/territories` uploads territories into the active backend.
-- `GET /api/assign` assigns the next available territory.
-- `POST /api/admin/assign` records an assignment for a specific territory.
-- `POST /api/admin/reset` clears assignment history in the active backend.
-- `GET /api/admin/database` returns the active backend.
-- `POST /api/admin/database` switches between `local` and `supabase`.
-- `GET /api/system-update` returns the active update banner.
+1. Deploy, open `/signup` — create your account (this makes you territory servant) and set the two codes.
+2. `/admin/import` — upload your KMZ.
+3. `/admin/people` — share the join code on WhatsApp; approve people as they sign up.
+4. `/admin/territories` — assign, share links, clear when returned.
 
 ## Development
 
@@ -79,8 +58,6 @@ The admin dashboard upload tool can seed Supabase with the same JSON format used
 npm install
 npm run dev
 ```
-
-Open `http://localhost:3000`.
 
 Run checks before committing:
 
