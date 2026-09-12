@@ -7,6 +7,7 @@ import { Clock, Hand, Info, Loader2, MapPinned, ShieldCheck } from 'lucide-react
 
 import { RoleNav, SignOutButton } from '@/components/app-nav';
 import PushCard from '@/components/push-card';
+import ThemeToggle from '@/components/theme-toggle';
 import TerritoryPanel, { type PanelTerritory } from '@/components/territory-panel';
 import { Button } from '@/components/ui/button';
 
@@ -92,6 +93,7 @@ export default function HomePage() {
                             <ShieldCheck className="h-3.5 w-3.5" />Desk
                         </Link>
                     )}
+                    <ThemeToggle />
                     <SignOutButton />
                 </div>
             </header>

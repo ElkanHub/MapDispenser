@@ -49,6 +49,13 @@ export default function RootLayout({
       <body
         className={`${robotoFlex.variable} ${robotoMono.variable} antialiased`}
       >
+        {/* apply a saved manual theme before first paint, so there is no flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var t=localStorage.getItem('md-theme');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t;}}catch(e){}",
+          }}
+        />
         <NextTopLoader color="#4285F4" height={3} showSpinner={false} shadow="0 0 8px #4285F4" />
         <PwaProvider />
         {children}

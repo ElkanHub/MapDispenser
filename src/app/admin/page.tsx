@@ -7,6 +7,7 @@ import { Check, Copy, History, Loader2, MapPinned, MessageCircle, Upload, UserPl
 
 import { SignOutButton } from '@/components/app-nav';
 import LiveMap from '@/components/live-map';
+import ThemeToggle from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { fetchOverview, shareOnWhatsApp, tokenLink, type AdminOverview, type AdminTerritory } from '@/lib/adminData';
 
@@ -100,7 +101,7 @@ export default function AdminDeskPage() {
                             <h1 className="font-bold leading-tight text-slate-900">Territory desk</h1>
                             {data.settings && <p className="text-xs text-slate-500">{data.settings.congregation_name}</p>}
                         </div>
-                        <SignOutButton className="ml-auto" />
+                        <span className="ml-auto flex items-center gap-2"><ThemeToggle /><SignOutButton /></span>
                     </header>
                     <div className="grid grid-cols-2 gap-3">
                         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"><p className="text-2xl font-extrabold text-slate-900">{data.stats.total}</p><p className="mt-0.5 text-xs font-medium text-slate-500">Territories</p></div>
@@ -141,7 +142,7 @@ export default function AdminDeskPage() {
                         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-white"><MapPinned className="h-3.5 w-3.5" /></span>
                         <span className="text-xs font-bold text-slate-900">{data.settings?.congregation_name || 'Territory desk'}</span>
                     </span>
-                    <span className="ml-auto pointer-events-auto"><SignOutButton /></span>
+                    <span className="ml-auto pointer-events-auto flex items-center gap-2"><ThemeToggle /><SignOutButton /></span>
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5">
                     <span className="rounded-full border border-slate-200 bg-white/95 px-2.5 py-1 text-[11px] font-bold text-amber-700 shadow backdrop-blur">{data.stats.assigned} out</span>

@@ -239,9 +239,9 @@
   --sidebar-ring: var(--m-primary);
 }
 
-/* ---- Material 3 roles · dark (follows the device) ---- */
+/* ---- Material 3 roles · dark (follows the device unless overridden) ---- */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --m-surface: #131314;
     --m-sc-lowest: #0e0e0f;
     --m-sc-low: #1b1b1f;
@@ -288,6 +288,58 @@
     --m-inverse-on-surface: #303034;
   }
 }
+
+/* Manual override: the in-app toggle stamps data-theme on <html>. Same block
+   as above — the toggle must win in both directions. */
+:root[data-theme="dark"] {
+  --m-surface: #131314;
+  --m-sc-lowest: #0e0e0f;
+  --m-sc-low: #1b1b1f;
+  --m-sc: #1e1f20;
+  --m-sc-high: #282a2c;
+  --m-sc-highest: #333537;
+  --m-on-surface: #e3e3e7;
+  --m-on-surface-strong: #c4c7c5;
+  --m-on-surface-var: #c4c7c5;
+  --m-outline: #8e918f;
+  --m-outline-variant: #444746;
+
+  --m-primary: #a8c7fa;
+  --m-on-primary: #062e6f;
+  --m-primary-container: #0842a0;
+  --m-primary-soft: #082e63;
+  --m-primary-border: #0842a0;
+  --m-primary-strong: #d3e3fd;
+  --m-primary-stronger: #ecf3fe;
+  --m-secondary-container: #004a77;
+  --m-on-secondary-container: #c2e7ff;
+
+  --m-tertiary: #6dd58c;
+  --m-tertiary-container: #0f5223;
+  --m-tertiary-soft: #0a3d18;
+  --m-tertiary-border: #146c2e;
+  --m-tertiary-bright: #146c2e;
+  --m-on-tertiary-container: #c4eed0;
+
+  --m-error: #f2b8b5;
+  --m-error-container: #601410;
+  --m-error-border: #8c1d18;
+  --m-error-bright: #8c1d18;
+  --m-on-error-container: #f9dedc;
+
+  --m-warn: #ffe08a;
+  --m-warn-container: #4a3800;
+  --m-warn-soft: #3a2f00;
+  --m-warn-border: #6b5600;
+  --m-warn-mid: #d5a400;
+  --m-on-warn: #ffe08a;
+
+  --m-inverse-surface: #e3e3e7;
+  --m-inverse-on-surface: #303034;
+}
+
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
 
 @layer base {
   * {
