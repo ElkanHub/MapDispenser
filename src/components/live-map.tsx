@@ -209,7 +209,16 @@ export default function LiveMap({
 
     // Live position dot + inside/outside check against the highlighted territory.
     useEffect(() => {
-        if (!showLocation || !navigator.geolocation) return;
+        if (!showLocation) return;
+        // Browsers only grant geolocation on HTTPS (or localhost); say so instead of failing silently
+        if (!window.isSecureContext) {
+            setLocationError('Location needs a secure (https://) address — open the app over HTTPS.');
+            return;
+        }
+        if (!navigator.geolocation) {
+            setLocationError('This browser has no location support.');
+            return;
+        }
 
         const watchId = navigator.geolocation.watchPosition(
             (position) => {
