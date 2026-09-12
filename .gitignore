@@ -50,3 +50,4 @@ data/backend.json
 
 # PWA - generated at build
 /public/sw.js
+/data/vapid.json

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getActiveCheckoutForUser, getUserById, updateUser } from '@/lib/appState';
 import { getSession } from '@/lib/auth';
+import { sendPushToAdmins } from '@/lib/push';
 
 // Publisher raises (or withdraws) a hand for a territory; admins see it highlighted.
 export async function POST(request: Request) {
@@ -20,6 +21,15 @@ export async function POST(request: Request) {
         }
 
         await updateUser(user.id, { requested_at: on ? new Date().toISOString() : null });
+
+        if (on) {
+            await sendPushToAdmins({
+                title: 'Territory request ✋',
+                body: `${user.name} is asking for a territory.`,
+                url: '/admin/people',
+            });
+        }
+
         return NextResponse.json({ success: true, requested: on });
     } catch {
         return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });

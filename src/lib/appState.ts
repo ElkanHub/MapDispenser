@@ -51,14 +51,25 @@ export interface Landmark {
     lat: number;
 }
 
+export interface PushSubscriptionRecord {
+    id: number;
+    user_id: number;
+    endpoint: string;
+    p256dh: string;
+    auth: string;
+    created_at: string;
+}
+
 interface AppFileState {
     settings: CongregationSettings | null;
     users: AppUser[];
     checkouts: Checkout[];
     landmarks: Landmark[];
+    push_subscriptions: PushSubscriptionRecord[];
     nextUserId: number;
     nextCheckoutId: number;
     nextLandmarkId: number;
+    nextPushId: number;
 }
 
 const appStatePath = path.join(process.cwd(), 'data', 'app-state.json');
@@ -85,12 +96,14 @@ function readLocal(): AppFileState {
             users: (state.users || []).map((user: AppUser) => ({ ...user, requested_at: user.requested_at ?? null })),
             checkouts: state.checkouts || [],
             landmarks: state.landmarks || [],
+            push_subscriptions: state.push_subscriptions || [],
             nextUserId: state.nextUserId || 1,
             nextCheckoutId: state.nextCheckoutId || 1,
             nextLandmarkId: state.nextLandmarkId || 1,
+            nextPushId: state.nextPushId || 1,
         };
     } catch {
-        return { settings: null, users: [], checkouts: [], landmarks: [], nextUserId: 1, nextCheckoutId: 1, nextLandmarkId: 1 };
+        return { settings: null, users: [], checkouts: [], landmarks: [], push_subscriptions: [], nextUserId: 1, nextCheckoutId: 1, nextLandmarkId: 1, nextPushId: 1 };
     }
 }
 
@@ -412,4 +425,66 @@ export async function upsertLandmarks(items: Omit<Landmark, 'id'>[]): Promise<nu
     }
     writeLocal(state);
     return items.length;
+}
+
+// ---------------- push subscriptions ----------------
+
+export async function savePushSubscription(userId: number, subscription: { endpoint: string; keys: { p256dh: string; auth: string } }) {
+    if (getDataBackend() === 'neon') {
+        const db = await neonReady();
+        await db`
+            INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth)
+            VALUES (${userId}, ${subscription.endpoint}, ${subscription.keys.p256dh}, ${subscription.keys.auth})
+            ON CONFLICT (endpoint) DO UPDATE SET
+                user_id = EXCLUDED.user_id,
+                p256dh = EXCLUDED.p256dh,
+                auth = EXCLUDED.auth`;
+        return;
+    }
+    const state = readLocal();
+    const existing = state.push_subscriptions.find((record) => record.endpoint === subscription.endpoint);
+    if (existing) {
+        existing.user_id = userId;
+        existing.p256dh = subscription.keys.p256dh;
+        existing.auth = subscription.keys.auth;
+    } else {
+        state.push_subscriptions.push({
+            id: state.nextPushId,
+            user_id: userId,
+            endpoint: subscription.endpoint,
+            p256dh: subscription.keys.p256dh,
+            auth: subscription.keys.auth,
+            created_at: new Date().toISOString(),
+        });
+        state.nextPushId += 1;
+    }
+    writeLocal(state);
+}
+
+export async function removePushSubscription(endpoint: string) {
+    if (getDataBackend() === 'neon') {
+        const db = await neonReady();
+        await db`DELETE FROM push_subscriptions WHERE endpoint = ${endpoint}`;
+        return;
+    }
+    const state = readLocal();
+    state.push_subscriptions = state.push_subscriptions.filter((record) => record.endpoint !== endpoint);
+    writeLocal(state);
+}
+
+export async function listPushSubscriptionsFor(userIds: number[]): Promise<PushSubscriptionRecord[]> {
+    if (!userIds.length) return [];
+    if (getDataBackend() === 'neon') {
+        const db = await neonReady();
+        const rows = await db`SELECT id, user_id, endpoint, p256dh, auth, created_at::text FROM push_subscriptions WHERE user_id = ANY(${userIds})`;
+        return rows.map((row) => ({
+            id: Number(row.id),
+            user_id: Number(row.user_id),
+            endpoint: String(row.endpoint),
+            p256dh: String(row.p256dh),
+            auth: String(row.auth),
+            created_at: String(row.created_at),
+        }));
+    }
+    return readLocal().push_subscriptions.filter((record) => userIds.includes(record.user_id));
 }

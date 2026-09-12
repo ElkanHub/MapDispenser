@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { deleteUser, getUserById, updateUser, type Role } from '@/lib/appState';
 import { hashPassword, requireSession } from '@/lib/auth';
+import { sendPushToUsers } from '@/lib/push';
 
 const ROLES: Role[] = ['publisher', 'territory_team', 'territory_servant'];
 
@@ -22,6 +23,11 @@ export async function POST(request: Request) {
         switch (body.action) {
             case 'approve':
                 await updateUser(id, { status: 'active' });
+                await sendPushToUsers([id], {
+                    title: 'Account approved ✅',
+                    body: 'Welcome aboard — you can now see your territory when one is assigned.',
+                    url: '/home',
+                });
                 break;
             case 'role': {
                 const role = body.role as Role;

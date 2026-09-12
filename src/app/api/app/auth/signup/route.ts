@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { countUsers, createUser, findUserByEmail, getSettings, saveSettings, type Role, type UserStatus } from '@/lib/appState';
 import { createSession, hashPassword } from '@/lib/auth';
+import { sendPushToAdmins } from '@/lib/push';
 
 const normalizeCode = (value: unknown) => String(value || '').trim().toUpperCase();
 
@@ -49,6 +50,15 @@ export async function POST(request: Request) {
 
         const user = await createUser({ name, email, password_hash: hashPassword(password), role, status });
         await createSession({ userId: user.id, name: user.name, role: user.role });
+
+        if (status === 'pending') {
+            await sendPushToAdmins({
+                title: 'New member waiting 👤',
+                body: `${user.name} joined with the congregation code — approve them in People.`,
+                url: '/admin/people',
+            });
+        }
+
         return NextResponse.json({ success: true, role: user.role, status: user.status });
     } catch (error) {
         return NextResponse.json({ error: error instanceof Error ? error.message : 'Sign up failed.' }, { status: 500 });

@@ -51,7 +51,13 @@ Environment variables:
 DATABASE_URL=postgres://...        # Neon mode
 TERRITORY_DATA_BACKEND=neon        # optional; local is the default
 AUTH_SECRET=some-long-random-text  # required on hosts with a read-only filesystem
+VAPID_PUBLIC_KEY=...               # push notifications; generate with: npx web-push generate-vapid-keys
+VAPID_PRIVATE_KEY=...              # required on read-only hosts; locally auto-generated to data/vapid.json
 ```
+
+### Push notifications
+
+Installed apps get alerts for what needs attention: publishers hear when a territory is assigned/cleared and when their account is approved; the territory team hears when someone asks for a territory or a new member needs approval. Permission is requested on the welcome screen (and via a card on Home/People); People has a "Send test" button. On iPhone, push requires iOS 16.4+ with the app installed to the home screen. Without VAPID keys the feature quietly disables itself — nothing else is affected.
 
 ## First-run checklist
 

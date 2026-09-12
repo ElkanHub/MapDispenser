@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { createCheckout, endCheckout, getUserById } from '@/lib/appState';
+import { createCheckout, endCheckout, getUserById, listCheckouts } from '@/lib/appState';
 import { requireSession } from '@/lib/auth';
 import { getTerritoryById } from '@/lib/dispenserState';
+import { sendPushToUsers } from '@/lib/push';
 
 export async function POST(request: Request) {
     const session = await requireSession(true);
@@ -26,6 +27,14 @@ export async function POST(request: Request) {
         const result = await createCheckout({ territoryId, userId, holderName, assignedBy: session.name });
         if ('error' in result) return NextResponse.json({ error: result.error }, { status: 409 });
 
+        if (userId) {
+            await sendPushToUsers([userId], {
+                title: 'Territory assigned to you 🗺️',
+                body: `${territory.territory_name} is yours — tap to open your map.`,
+                url: '/home',
+            });
+        }
+
         return NextResponse.json({ success: true, checkout: result });
     } catch {
         return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });
@@ -39,8 +48,20 @@ export async function PATCH(request: Request) {
     try {
         const body = await request.json();
         const status = body.status === 'returned' ? 'returned' : 'cleared';
-        const success = await endCheckout(Number(body.checkoutId), status);
+        const checkoutId = Number(body.checkoutId);
+        const checkout = (await listCheckouts()).find((item) => item.id === checkoutId);
+        const success = await endCheckout(checkoutId, status);
         if (!success) return NextResponse.json({ error: 'No active checkout with that id.' }, { status: 404 });
+
+        if (checkout?.user_id) {
+            const territory = await getTerritoryById(checkout.territory_id);
+            await sendPushToUsers([checkout.user_id], {
+                title: 'Territory returned',
+                body: `${territory?.territory_name || 'Your territory'} has been cleared from you. Its link no longer works.`,
+                url: '/home',
+            });
+        }
+
         return NextResponse.json({ success: true });
     } catch {
         return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });

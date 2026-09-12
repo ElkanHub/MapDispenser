@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { enablePush } from '@/lib/pwaClient';
 
 const PERKS = [
     'Live map of your territory with your position on it',
@@ -16,6 +17,15 @@ const PERKS = [
 export default function WelcomePage() {
     const router = useRouter();
     const [me, setMe] = useState<{ name: string; role: string; congregation: string } | null>(null);
+    const [going, setGoing] = useState(false);
+
+    const go = async () => {
+        if (!me || going) return;
+        setGoing(true);
+        // best moment to ask: a deliberate tap, before they're busy in the app
+        await enablePush();
+        router.replace(me.role === 'publisher' ? '/home' : '/admin');
+    };
 
     useEffect(() => {
         fetch('/api/app/me')
@@ -67,10 +77,14 @@ export default function WelcomePage() {
             <Button
                 className="animate-in fade-in mt-10 w-full max-w-xs bg-white py-6 text-base font-bold text-indigo-700 shadow-xl hover:bg-indigo-50 duration-500"
                 style={{ animationDelay: '950ms', animationFillMode: 'both' }}
-                onClick={() => router.replace(me.role === 'publisher' ? '/home' : '/admin')}
+                onClick={go}
+                disabled={going}
             >
-                Let&apos;s go
+                {going ? <Loader2 className="h-5 w-5 animate-spin" /> : "Let's go"}
             </Button>
+            <p className="animate-in fade-in mt-3 text-xs text-indigo-200 duration-500" style={{ animationDelay: '1100ms', animationFillMode: 'both' }}>
+                We&apos;ll ask to send you notifications — say yes to know when a territory is yours.
+            </p>
         </div>
     );
 }

@@ -44,6 +44,37 @@ self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
+// Push notifications: territory assigned, requests, approvals.
+self.addEventListener('push', (event) => {
+    let data = {};
+    try { data = event.data ? event.data.json() : {}; } catch { /* not json */ }
+    event.waitUntil(
+        self.registration.showNotification(data.title || 'MapDispenser', {
+            body: data.body || '',
+            icon: '/icons/icon-192x192.png',
+            badge: '/icons/icon-96x96.png',
+            data: { url: data.url || '/' },
+            tag: data.url || 'mapdispenser', // same-topic notifications replace, not stack
+        })
+    );
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    const url = (event.notification.data && event.notification.data.url) || '/';
+    event.waitUntil((async () => {
+        const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        for (const client of windows) {
+            if ('focus' in client) {
+                await client.focus();
+                if ('navigate' in client) await client.navigate(url).catch(() => {});
+                return;
+            }
+        }
+        await self.clients.openWindow(url);
+    })());
+});
+
 async function cacheFirst(request, cacheName, trimTo) {
     const cache = await caches.open(cacheName);
     const hit = await cache.match(request);

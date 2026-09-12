@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Check, Hand, KeyRound, Loader2, MapPinned, MessageCircle, RotateCcw, Trash2 } from 'lucide-react';
 
+import PushCard from '@/components/push-card';
 import { Button } from '@/components/ui/button';
 import { fetchOverview, shareOnWhatsApp, ROLE_LABELS, type AdminOverview, type AdminUser } from '@/lib/adminData';
 
@@ -164,6 +165,8 @@ export default function PeoplePage() {
                 </header>
 
                 {error && <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+
+                <div className="mb-3"><PushCard withTest /></div>
 
                 {data.settings && (
                     <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">

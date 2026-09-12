@@ -43,6 +43,15 @@ export async function ensureNeonAppSchema(sql: NeonClient) {
     await sql`CREATE INDEX IF NOT EXISTS checkouts_territory_idx ON checkouts(territory_id)`;
     await sql`CREATE INDEX IF NOT EXISTS checkouts_user_idx ON checkouts(user_id)`;
 
+    await sql`CREATE TABLE IF NOT EXISTS push_subscriptions (
+        id bigserial PRIMARY KEY,
+        user_id bigint NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
+        endpoint text NOT NULL UNIQUE,
+        p256dh text NOT NULL,
+        auth text NOT NULL,
+        created_at timestamptz NOT NULL DEFAULT now()
+    )`;
+
     await sql`CREATE TABLE IF NOT EXISTS landmarks (
         id bigserial PRIMARY KEY,
         name text NOT NULL,

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Clock, Hand, Info, Loader2, MapPinned, ShieldCheck } from 'lucide-react';
 
 import { RoleNav, SignOutButton } from '@/components/app-nav';
+import PushCard from '@/components/push-card';
 import TerritoryPanel, { type PanelTerritory } from '@/components/territory-panel';
 import { Button } from '@/components/ui/button';
 
@@ -96,6 +97,7 @@ export default function HomePage() {
             </header>
 
             <main className="mx-auto flex w-full max-w-md flex-col gap-4 p-4">
+                <PushCard />
                 {update && (
                     <div className="flex gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4">
                         <Info className="h-5 w-5 shrink-0 text-blue-600" />
