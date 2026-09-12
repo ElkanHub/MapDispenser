@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Clock, Info, Loader2, MapPinned, ShieldCheck } from 'lucide-react';
+import { Clock, Hand, Info, Loader2, MapPinned, ShieldCheck } from 'lucide-react';
 
 import { PublisherNav, SignOutButton } from '@/components/app-nav';
 import TerritoryPanel, { type PanelTerritory } from '@/components/territory-panel';
+import { Button } from '@/components/ui/button';
 
 interface MeResponse {
     user: { id: number; name: string; role: string; status: string };
@@ -16,6 +17,7 @@ interface MeResponse {
 interface AssignmentResponse {
     pending?: boolean;
     none?: boolean;
+    requested?: boolean;
     checkout?: { id: number; assigned_at: string; token: string };
     territory?: PanelTerritory;
 }
@@ -25,6 +27,21 @@ export default function HomePage() {
     const [me, setMe] = useState<MeResponse | null>(null);
     const [assignment, setAssignment] = useState<AssignmentResponse | null>(null);
     const [update, setUpdate] = useState<{ title: string; message: string } | null>(null);
+    const [asking, setAsking] = useState(false);
+
+    const toggleRequest = async (on: boolean) => {
+        setAsking(true);
+        try {
+            const res = await fetch('/api/app/request-territory', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ on }),
+            });
+            if (res.ok) setAssignment((prev) => (prev ? { ...prev, requested: on } : prev));
+        } finally {
+            setAsking(false);
+        }
+    };
 
     useEffect(() => {
         (async () => {
@@ -102,10 +119,31 @@ export default function HomePage() {
                 {assignment.none && (
                     <div className="mt-10 flex flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
                         <MapPinned className="h-10 w-10 text-slate-300" />
-                        <h2 className="text-lg font-bold text-slate-900">No territory yet</h2>
+                        <h2 className="text-lg font-bold text-slate-900">No territory assigned yet</h2>
                         <p className="text-sm text-slate-500">
-                            When the territory servant assigns you a territory, it will appear here with its live map.
+                            When the territory servant assigns you one, it appears here with its live map.
                         </p>
+                        {assignment.requested ? (
+                            <>
+                                <span className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3.5 py-1.5 text-xs font-bold text-amber-800">
+                                    <Hand className="h-3.5 w-3.5" />
+                                    Request sent — your territory servant can see it
+                                </span>
+                                <button
+                                    type="button"
+                                    disabled={asking}
+                                    onClick={() => toggleRequest(false)}
+                                    className="text-xs font-medium text-slate-400 underline-offset-2 hover:underline"
+                                >
+                                    {asking ? 'One moment…' : 'Cancel request'}
+                                </button>
+                            </>
+                        ) : (
+                            <Button className="mt-1 gap-2" disabled={asking} onClick={() => toggleRequest(true)}>
+                                {asking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Hand className="h-4 w-4" />}
+                                Ask for a territory
+                            </Button>
+                        )}
                     </div>
                 )}
 

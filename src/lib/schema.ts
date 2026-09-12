@@ -27,6 +27,7 @@ export async function ensureNeonAppSchema(sql: NeonClient) {
         status text NOT NULL DEFAULT 'pending',
         created_at timestamptz NOT NULL DEFAULT now()
     )`;
+    await sql`ALTER TABLE app_users ADD COLUMN IF NOT EXISTS requested_at timestamptz`;
 
     await sql`CREATE TABLE IF NOT EXISTS checkouts (
         id bigserial PRIMARY KEY,

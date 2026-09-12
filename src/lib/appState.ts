@@ -24,6 +24,7 @@ export interface AppUser {
     role: Role;
     status: UserStatus;
     created_at: string;
+    requested_at: string | null; // set while the person is asking for a territory
     password_hash: string;
 }
 
@@ -80,7 +81,8 @@ function readLocal(): AppFileState {
         const state = JSON.parse(fs.readFileSync(appStatePath, 'utf8'));
         return {
             settings: state.settings || null,
-            users: state.users || [],
+            // records written before the field existed default to "not asking"
+            users: (state.users || []).map((user: AppUser) => ({ ...user, requested_at: user.requested_at ?? null })),
             checkouts: state.checkouts || [],
             landmarks: state.landmarks || [],
             nextUserId: state.nextUserId || 1,
@@ -150,7 +152,7 @@ export async function findUserByEmail(email: string): Promise<AppUser | null> {
     const normalized = email.trim().toLowerCase();
     if (getDataBackend() === 'neon') {
         const db = await neonReady();
-        const rows = await db`SELECT id, name, email, role, status, created_at::text, password_hash FROM app_users WHERE email = ${normalized}`;
+        const rows = await db`SELECT id, name, email, role, status, created_at::text, requested_at::text, password_hash FROM app_users WHERE email = ${normalized}`;
         return rows.length ? normalizeUser(rows[0]) : null;
     }
     return readLocal().users.find((user) => user.email === normalized) || null;
@@ -159,7 +161,7 @@ export async function findUserByEmail(email: string): Promise<AppUser | null> {
 export async function getUserById(id: number): Promise<AppUser | null> {
     if (getDataBackend() === 'neon') {
         const db = await neonReady();
-        const rows = await db`SELECT id, name, email, role, status, created_at::text, password_hash FROM app_users WHERE id = ${id}`;
+        const rows = await db`SELECT id, name, email, role, status, created_at::text, requested_at::text, password_hash FROM app_users WHERE id = ${id}`;
         return rows.length ? normalizeUser(rows[0]) : null;
     }
     return readLocal().users.find((user) => user.id === id) || null;
@@ -173,6 +175,7 @@ function normalizeUser(row: Record<string, unknown>): AppUser {
         role: row.role as Role,
         status: row.status as UserStatus,
         created_at: String(row.created_at),
+        requested_at: row.requested_at ? String(row.requested_at) : null,
         password_hash: String(row.password_hash),
     };
 }
@@ -185,7 +188,7 @@ export async function createUser(input: { name: string; email: string; password_
         const rows = await db`
             INSERT INTO app_users (name, email, password_hash, role, status)
             VALUES (${input.name.trim()}, ${email}, ${input.password_hash}, ${input.role}, ${input.status})
-            RETURNING id, name, email, role, status, created_at::text, password_hash`;
+            RETURNING id, name, email, role, status, created_at::text, requested_at::text, password_hash`;
         return normalizeUser(rows[0]);
     }
 
@@ -198,6 +201,7 @@ export async function createUser(input: { name: string; email: string; password_
         role: input.role,
         status: input.status,
         created_at: new Date().toISOString(),
+        requested_at: null,
     };
     state.users.push(user);
     state.nextUserId += 1;
@@ -208,25 +212,27 @@ export async function createUser(input: { name: string; email: string; password_
 export async function listUsers(): Promise<SafeUser[]> {
     if (getDataBackend() === 'neon') {
         const db = await neonReady();
-        const rows = await db`SELECT id, name, email, role, status, created_at::text FROM app_users ORDER BY created_at ASC`;
+        const rows = await db`SELECT id, name, email, role, status, created_at::text, requested_at::text FROM app_users ORDER BY created_at ASC`;
         return rows.map((row) => {
-            const { id, name, email, role, status, created_at } = normalizeUser({ ...row, password_hash: '' });
-            return { id, name, email, role, status, created_at };
+            const { id, name, email, role, status, created_at, requested_at } = normalizeUser({ ...row, password_hash: '' });
+            return { id, name, email, role, status, created_at, requested_at };
         });
     }
     return readLocal().users.map(stripHash);
 }
 
-export async function updateUser(id: number, changes: Partial<Pick<AppUser, 'role' | 'status' | 'password_hash' | 'name'>>): Promise<boolean> {
+export async function updateUser(id: number, changes: Partial<Pick<AppUser, 'role' | 'status' | 'password_hash' | 'name' | 'requested_at'>>): Promise<boolean> {
     if (getDataBackend() === 'neon') {
         const db = await neonReady();
         const existing = await getUserById(id);
         if (!existing) return false;
+        const requestedAt = 'requested_at' in changes ? changes.requested_at : existing.requested_at;
         await db`UPDATE app_users SET
             role = ${changes.role ?? existing.role},
             status = ${changes.status ?? existing.status},
             password_hash = ${changes.password_hash ?? existing.password_hash},
-            name = ${changes.name ?? existing.name}
+            name = ${changes.name ?? existing.name},
+            requested_at = ${requestedAt}
             WHERE id = ${id}`;
         return true;
     }
@@ -338,6 +344,8 @@ export async function createCheckout(input: {
 
     // keep the legacy assignment counters truthful for the old dashboard/stats
     await assignSpecificTerritory(input.territoryId);
+    // getting a territory settles any open request
+    if (input.userId) await updateUser(input.userId, { requested_at: null });
     return checkout;
 }
 

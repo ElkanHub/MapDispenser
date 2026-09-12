@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, KeyRound, Loader2, MessageCircle, RotateCcw, Trash2 } from 'lucide-react';
+import Link from 'next/link';
+import { Check, Hand, KeyRound, Loader2, MapPinned, MessageCircle, RotateCcw, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { fetchOverview, shareOnWhatsApp, ROLE_LABELS, type AdminOverview, type AdminUser } from '@/lib/adminData';
@@ -24,6 +25,9 @@ export default function PeoplePage() {
     useEffect(() => {
         reload();
         fetch('/api/app/me').then((res) => res.json()).then((body) => setMyRole(body.user?.role || '')).catch(() => {});
+        // near-real-time: territory requests light up without a manual refresh
+        const interval = setInterval(reload, 8000);
+        return () => clearInterval(interval);
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const act = async (payload: Record<string, unknown>) => {
@@ -60,7 +64,9 @@ export default function PeoplePage() {
 
     const isServant = myRole === 'territory_servant';
     const pending = data.users.filter((user) => user.status === 'pending');
-    const active = data.users.filter((user) => user.status === 'active');
+    // people asking for a territory float to the top, highlighted
+    const active = [...data.users.filter((user) => user.status === 'active')]
+        .sort((a, b) => Number(Boolean(b.requested_at)) - Number(Boolean(a.requested_at)));
 
     const codeRow = (label: string, code: string, kind: 'join' | 'team', shareLine: string) => (
         <div className="flex items-center gap-2">
@@ -80,17 +86,29 @@ export default function PeoplePage() {
     );
 
     const userRow = (user: AdminUser, index: number) => (
-        <div key={user.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
+        <div key={user.id} className={`flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 ${user.requested_at ? 'bg-amber-50 ring-2 ring-inset ring-amber-300' : ''}`}>
             <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${AVATAR_COLORS[index % AVATAR_COLORS.length]}`}>
                 {initials(user.name)}
             </span>
             <div className="min-w-0 flex-1 basis-40">
-                <p className="truncate text-sm font-semibold text-slate-900">{user.name}</p>
+                <p className="flex items-center gap-2 truncate text-sm font-semibold text-slate-900">
+                    {user.name}
+                    {user.requested_at && (
+                        <span className="inline-flex shrink-0 animate-pulse items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                            <Hand className="h-3 w-3" />asking
+                        </span>
+                    )}
+                </p>
                 <p className="truncate text-xs text-slate-500">
                     {ROLE_LABELS[user.role]}
                     {user.territory ? <> · holds <span className="font-semibold">{user.territory.name}</span></> : ' · no territory'}
                 </p>
             </div>
+            {user.requested_at && !user.territory && (
+                <Link href={`/admin/territories?for=${user.id}`}>
+                    <Button size="sm" className="gap-1.5 bg-amber-600 hover:bg-amber-700"><MapPinned className="h-3.5 w-3.5" />Give territory</Button>
+                </Link>
+            )}
             {user.status === 'pending' ? (
                 isServant && (
                     <Button size="sm" className="gap-1.5" onClick={() => act({ action: 'approve', id: user.id })}>

@@ -14,10 +14,10 @@ export async function GET() {
     if (user.status === 'pending') return NextResponse.json({ pending: true });
 
     const checkout = await getActiveCheckoutForUser(session.userId);
-    if (!checkout) return NextResponse.json({ none: true });
+    if (!checkout) return NextResponse.json({ none: true, requested: Boolean(user.requested_at) });
 
     const territory = await getTerritoryById(checkout.territory_id);
-    if (!territory) return NextResponse.json({ none: true });
+    if (!territory) return NextResponse.json({ none: true, requested: Boolean(user.requested_at) });
 
     return NextResponse.json({
         checkout: { id: checkout.id, assigned_at: checkout.assigned_at, token: checkout.token },

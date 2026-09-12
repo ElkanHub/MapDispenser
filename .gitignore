@@ -47,3 +47,6 @@ data/backend.json
 /data/app-state.json
 /data/auth-secret
 /data/backend.json
+
+# PWA - generated at build
+/public/sw.js

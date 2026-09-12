@@ -29,6 +29,7 @@ export interface AdminUser {
     role: 'publisher' | 'territory_team' | 'territory_servant';
     status: 'pending' | 'active';
     created_at: string;
+    requested_at: string | null;
     territory: { checkoutId: number; id: number; name: string } | null;
 }
 

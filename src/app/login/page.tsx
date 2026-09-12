@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2, MapPinned } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { installFlowDone } from '@/lib/pwaClient';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -38,7 +39,11 @@ export default function LoginPage() {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Sign in failed.');
-            router.replace(data.role === 'publisher' ? '/home' : '/admin');
+            if (installFlowDone()) {
+                router.replace(data.role === 'publisher' ? '/home' : '/admin');
+            } else {
+                router.replace('/install');
+            }
         } catch (submitError) {
             setError(submitError instanceof Error ? submitError.message : 'Sign in failed.');
             setBusy(false);

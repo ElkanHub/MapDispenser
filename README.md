@@ -34,6 +34,12 @@ Every interactive map also has a basemap toggle: normal street map (OpenStreetMa
 
 `territories` keep the original card fields (`map_link`, `map_image_url`, `map_description`) — the image doubles as the offline copy — plus `geometry` (GeoJSON, from the KMZ) and `color`. The account layer adds `app_settings` (congregation + codes), `app_users`, and `checkouts` (holder, token, status, timestamps). The legacy anonymous `assignments` table still records every checkout so historical counters keep working.
 
+## PWA
+
+The app installs to the home screen (Android and iOS) with its own icon and splash colors. After signup, a one-time guide walks each person through installing for their platform (with a one-tap native install on Chrome); a welcome screen follows. The service worker (`scripts/sw.template.js`, stamped with a build version by `scripts/build-sw.mjs` on every `npm run build`) caches the app shell, map tiles, images, and last-seen API data, so a publisher's territory and map keep working offline. The UI always says what's happening: a top loading bar on navigation, online/offline banners, and an "Update available" popup when a new deploy is ready.
+
+Publishers without a territory can tap **Ask for a territory**; on the admin People tab their card highlights amber ("asking") with a **Give territory** shortcut that jumps to the territory list in one-tap assign mode. Assigning clears the request automatically.
+
 ## Backends
 
 - **Local (default):** everything in `data/*.json`. `data/app-state.json` (accounts) and `data/auth-secret` are per-deployment and git-ignored. Fine for a single self-hosted box; not for serverless.

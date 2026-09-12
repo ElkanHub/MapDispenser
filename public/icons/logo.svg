@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5b54f0"/>
+      <stop offset="1" stop-color="#3c34c9"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <!-- territory polygon -->
+  <polygon points="122,178 268,142 388,196 366,330 196,368 128,296"
+           fill="rgba(255,255,255,0.16)" stroke="#ffffff" stroke-width="18" stroke-linejoin="round"/>
+  <!-- dashed route -->
+  <path d="M170 322 C 220 280, 250 300, 300 240" fill="none" stroke="#ffd166" stroke-width="14"
+        stroke-linecap="round" stroke-dasharray="2 30"/>
+  <!-- map pin -->
+  <path d="M300 148 c 42 0 74 32 74 72 0 54 -74 118 -74 118 s -74 -64 -74 -118 c 0 -40 32 -72 74 -72 z"
+        fill="#ffffff"/>
+  <circle cx="300" cy="222" r="28" fill="#4f46e5"/>
+</svg>

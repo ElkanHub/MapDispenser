@@ -24,7 +24,9 @@ function shareText(name: string, link: string) {
 
 function TerritoriesScreen() {
     const router = useRouter();
-    const focusId = Number(useSearchParams().get('focus')) || null;
+    const searchParams = useSearchParams();
+    const focusId = Number(searchParams.get('focus')) || null;
+    const forId = Number(searchParams.get('for')) || null;
     const [data, setData] = useState<AdminOverview | null>(null);
     const [assignTarget, setAssignTarget] = useState<AdminTerritory | null>(null);
     const [linkName, setLinkName] = useState('');
@@ -93,8 +95,11 @@ function TerritoriesScreen() {
         );
     }
 
-    const freeUsers = data.users.filter((user) => user.status === 'active' && !user.territory);
+    // people asking for a territory come first in the assign sheet
+    const freeUsers = [...data.users.filter((user) => user.status === 'active' && !user.territory)]
+        .sort((a, b) => Number(Boolean(b.requested_at)) - Number(Boolean(a.requested_at)));
     const heldUsers = data.users.filter((user) => user.status === 'active' && user.territory);
+    const forUser = forId ? data.users.find((user) => user.id === forId && user.status === 'active' && !user.territory) || null : null;
 
     return (
         <div className="min-h-screen bg-slate-50">
@@ -103,6 +108,17 @@ function TerritoriesScreen() {
                     <h1 className="text-xl font-bold text-slate-900">Territories</h1>
                     <span className="text-xs font-medium text-slate-500">{data.stats.assigned} out · {data.stats.available} free</span>
                 </header>
+
+                {forUser && (
+                    <div className="mb-3 flex items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 p-3.5">
+                        <span className="flex h-9 w-9 shrink-0 animate-pulse items-center justify-center rounded-full bg-amber-500 text-white">👋</span>
+                        <div className="min-w-0 flex-1">
+                            <p className="text-sm font-bold text-amber-900">Choosing a territory for {forUser.name}</p>
+                            <p className="text-xs text-amber-800">Tap Assign on any free territory below.</p>
+                        </div>
+                        <button type="button" onClick={() => router.replace('/admin/territories')} className="text-xs font-semibold text-amber-700 underline-offset-2 hover:underline">Cancel</button>
+                    </div>
+                )}
 
                 <div className="flex flex-col gap-2.5">
                     {data.territories.map((territory) => {
@@ -129,8 +145,20 @@ function TerritoriesScreen() {
 
                                 <div className="mt-2.5 flex flex-wrap gap-2">
                                     {territory.status === 'available' && (
-                                        <Button size="sm" className="gap-1.5" onClick={() => { setAssignTarget(territory); setDone(null); setSheetError(''); }}>
-                                            <UserPlus className="h-3.5 w-3.5" />Assign
+                                        <Button
+                                            size="sm"
+                                            className={`gap-1.5 ${forUser ? 'bg-amber-600 hover:bg-amber-700' : ''}`}
+                                            disabled={busy}
+                                            onClick={() => {
+                                                setDone(null);
+                                                setSheetError('');
+                                                setAssignTarget(territory);
+                                                // direct mode: a person was already chosen on the People tab
+                                                if (forUser) assign(territory, forUser.id);
+                                            }}
+                                        >
+                                            {busy && forUser ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
+                                            {forUser ? `Assign to ${forUser.name.split(' ')[0]}` : 'Assign'}
                                         </Button>
                                     )}
                                     {territory.checkout && (
@@ -177,7 +205,7 @@ function TerritoriesScreen() {
                                         <MessageCircle className="h-4 w-4" />WhatsApp
                                     </Button>
                                 </div>
-                                <Button variant="ghost" className="w-full" onClick={() => setAssignTarget(null)}>Done</Button>
+                                <Button variant="ghost" className="w-full" onClick={() => { setAssignTarget(null); if (forId) router.replace('/admin/territories'); }}>Done</Button>
                             </div>
                         ) : (
                             <>
@@ -187,9 +215,12 @@ function TerritoriesScreen() {
 
                                 <div className="mt-3 divide-y divide-slate-100">
                                     {freeUsers.map((user) => (
-                                        <div key={user.id} className="flex items-center gap-3 py-3">
+                                        <div key={user.id} className={`flex items-center gap-3 py-3 ${user.requested_at ? 'rounded-lg bg-amber-50 px-2 -mx-2' : ''}`}>
                                             <div className="min-w-0 flex-1">
-                                                <p className="truncate text-sm font-semibold text-slate-900">{user.name}</p>
+                                                <p className="flex items-center gap-2 truncate text-sm font-semibold text-slate-900">
+                                                    {user.name}
+                                                    {user.requested_at && <span className="animate-pulse rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white">asking</span>}
+                                                </p>
                                                 <p className="text-xs text-slate-500">no territory</p>
                                             </div>
                                             <Button size="sm" disabled={busy} onClick={() => assign(assignTarget, user.id)}>Assign</Button>

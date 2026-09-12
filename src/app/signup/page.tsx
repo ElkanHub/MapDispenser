@@ -63,7 +63,8 @@ export default function SignupPage() {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Sign up failed.');
-            router.replace(data.role === 'publisher' ? '/home' : '/admin');
+            // compulsory once: walk them through installing the app first
+            router.replace('/install');
         } catch (submitError) {
             setError(submitError instanceof Error ? submitError.message : 'Sign up failed.');
             setBusy(false);
