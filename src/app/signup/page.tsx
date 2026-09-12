@@ -32,13 +32,24 @@ export default function SignupPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [busy, setBusy] = useState(false);
+    const [bootError, setBootError] = useState('');
 
-    useEffect(() => {
+    // Never guess the mode: setup vs join comes from the server, and a failed
+    // check is shown as an error instead of silently rendering the join form.
+    const loadBootstrap = () => {
+        setBootError('');
+        setNeedsSetup(null);
         fetch('/api/app/auth/bootstrap')
-            .then((res) => res.json())
-            .then((data) => setNeedsSetup(Boolean(data.needsSetup)))
-            .catch(() => setNeedsSetup(false));
-    }, []);
+            .then(async (res) => {
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Could not reach the server.');
+                setNeedsSetup(Boolean(data.needsSetup));
+            })
+            .catch((bootstrapError) => {
+                setBootError(bootstrapError instanceof Error ? bootstrapError.message : 'Could not reach the server.');
+            });
+    };
+    useEffect(loadBootstrap, []);
 
     const submit = async (event: React.FormEvent) => {
         event.preventDefault();
@@ -58,6 +69,21 @@ export default function SignupPage() {
             setBusy(false);
         }
     };
+
+    if (bootError) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+                <div className="w-full max-w-sm space-y-4 rounded-2xl border border-red-200 bg-white p-6 text-center shadow-sm">
+                    <h1 className="text-lg font-bold text-slate-900">Can&apos;t check the database</h1>
+                    <p className="rounded-lg bg-red-50 px-3 py-2 text-left text-sm text-red-700">{bootError}</p>
+                    <p className="text-xs text-slate-500">
+                        Usually this means the app is set to the Neon backend but DATABASE_URL is missing or wrong (check your host&apos;s environment variables, or a leftover data/backend.json).
+                    </p>
+                    <Button className="w-full" onClick={loadBootstrap}>Try again</Button>
+                </div>
+            </div>
+        );
+    }
 
     if (needsSetup === null) {
         return (
