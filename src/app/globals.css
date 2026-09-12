@@ -4,6 +4,12 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================================================
+   Material 3 direction, seeded from Google Blue #0B57D0.
+   The app's Tailwind palette families are remapped onto M3 ROLES below, so
+   every screen picks up the scheme — and its dark theme — from this one file.
+   ========================================================================== */
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -45,75 +51,242 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+
+  /* M3 tonal pill (secondary container) as first-class utilities */
+  --color-tonal: var(--m-secondary-container);
+  --color-on-tonal: var(--m-on-secondary-container);
+
+  /* ---- palette remaps: the classes the app already uses become M3 roles ---- */
+  --color-white: var(--m-sc-lowest);
+
+  --color-slate-50: var(--m-surface);
+  --color-slate-100: var(--m-sc);
+  --color-slate-200: var(--m-sc-highest);
+  --color-slate-300: var(--m-outline-variant);
+  --color-slate-400: var(--m-outline);
+  --color-slate-500: var(--m-on-surface-var);
+  --color-slate-600: var(--m-on-surface-var);
+  --color-slate-700: var(--m-on-surface-strong);
+  --color-slate-800: var(--m-on-surface);
+  --color-slate-900: var(--m-on-surface);
+  --color-slate-950: var(--m-on-surface);
+  --color-zinc-50: var(--m-surface);
+  --color-zinc-100: var(--m-sc);
+  --color-zinc-200: var(--m-sc-highest);
+  --color-zinc-300: var(--m-outline-variant);
+  --color-zinc-400: var(--m-outline);
+  --color-zinc-500: var(--m-on-surface-var);
+  --color-zinc-600: var(--m-on-surface-var);
+  --color-zinc-700: var(--m-on-surface-strong);
+  --color-zinc-800: var(--m-on-surface);
+  --color-zinc-900: var(--m-on-surface);
+  --color-zinc-950: var(--m-on-surface);
+  --color-gray-50: var(--m-surface);
+  --color-gray-100: var(--m-sc);
+  --color-gray-200: var(--m-sc-highest);
+  --color-gray-400: var(--m-outline);
+  --color-gray-500: var(--m-on-surface-var);
+  --color-gray-700: var(--m-on-surface-strong);
+  --color-gray-900: var(--m-on-surface);
+
+  --color-indigo-50: var(--m-primary-soft);
+  --color-indigo-100: var(--m-primary-container);
+  --color-indigo-200: var(--m-primary-border);
+  --color-indigo-400: var(--m-primary);
+  --color-indigo-500: var(--m-primary);
+  --color-indigo-600: var(--m-primary);
+  --color-indigo-700: var(--m-primary-strong);
+  --color-indigo-800: var(--m-primary-stronger);
+  --color-indigo-900: var(--m-primary-stronger);
+
+  --color-blue-50: var(--m-primary-soft);
+  --color-blue-100: var(--m-primary-container);
+  --color-blue-200: var(--m-primary-border);
+  --color-blue-500: var(--m-primary);
+  --color-blue-600: var(--m-primary);
+  --color-blue-700: var(--m-primary-strong);
+  --color-blue-800: var(--m-primary-stronger);
+  --color-blue-900: var(--m-primary-stronger);
+
+  --color-sky-100: var(--m-secondary-container);
+  --color-sky-600: var(--m-primary);
+  --color-sky-800: var(--m-on-secondary-container);
+
+  --color-emerald-50: var(--m-tertiary-soft);
+  --color-emerald-100: var(--m-tertiary-container);
+  --color-emerald-200: var(--m-tertiary-border);
+  --color-emerald-300: var(--m-tertiary-bright);
+  --color-emerald-500: var(--m-tertiary);
+  --color-emerald-600: var(--m-tertiary);
+  --color-emerald-700: var(--m-on-tertiary-container);
+  --color-emerald-800: var(--m-on-tertiary-container);
+  --color-emerald-900: var(--m-on-tertiary-container);
+  --color-green-50: var(--m-tertiary-soft);
+  --color-green-200: var(--m-tertiary-container);
+  --color-green-400: var(--m-tertiary-bright);
+  --color-green-500: #34a853;
+  --color-green-700: var(--m-on-tertiary-container);
+
+  --color-amber-50: var(--m-warn-soft);
+  --color-amber-100: var(--m-warn-container);
+  --color-amber-200: var(--m-warn-border);
+  --color-amber-300: var(--m-warn-border);
+  --color-amber-400: var(--m-warn-mid);
+  --color-amber-500: var(--m-warn);
+  --color-amber-600: var(--m-warn);
+  --color-amber-700: var(--m-on-warn);
+  --color-amber-800: var(--m-on-warn);
+  --color-amber-900: var(--m-on-warn);
+
+  --color-red-50: var(--m-error-container);
+  --color-red-100: var(--m-error-bright);
+  --color-red-200: var(--m-error-border);
+  --color-red-500: var(--m-error);
+  --color-red-600: var(--m-error);
+  --color-red-700: var(--m-on-error-container);
+
+  --color-violet-50: var(--m-primary-soft);
+  --color-violet-100: var(--m-primary-container);
+  --color-violet-600: var(--m-primary);
+  --color-violet-700: var(--m-primary-strong);
+
+  /* M3 carries hierarchy at 400/500 — heavy weights read as another brand */
+  --font-weight-semibold: 500;
+  --font-weight-bold: 500;
+  --font-weight-extrabold: 600;
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --radius: 0.75rem; /* M3 card radius: 12px */
+
+  /* ---- Material 3 roles · light ---- */
+  --m-surface: #fdfcff;
+  --m-sc-lowest: #ffffff;
+  --m-sc-low: #f7f9ff;
+  --m-sc: #f0f4f9;
+  --m-sc-high: #e9eef6;
+  --m-sc-highest: #e3e9f1;
+  --m-on-surface: #1b1b1f;
+  --m-on-surface-strong: #303034;
+  --m-on-surface-var: #444746;
+  --m-outline: #747775;
+  --m-outline-variant: #c4c7c5;
+
+  --m-primary: #0b57d0;
+  --m-on-primary: #ffffff;
+  --m-primary-container: #d3e3fd;
+  --m-primary-soft: #ecf3fe;
+  --m-primary-border: #a8c7fa;
+  --m-primary-strong: #0842a0;
+  --m-primary-stronger: #062e6f;
+  --m-secondary-container: #c2e7ff;
+  --m-on-secondary-container: #001d35;
+
+  --m-tertiary: #146c2e;
+  --m-tertiary-container: #c4eed0;
+  --m-tertiary-soft: #e7f6ea;
+  --m-tertiary-border: #6dd58c;
+  --m-tertiary-bright: #6dd58c;
+  --m-on-tertiary-container: #0f5223;
+
+  --m-error: #b3261e;
+  --m-error-container: #f9dedc;
+  --m-error-border: #f2b8b5;
+  --m-error-bright: #f2b8b5;
+  --m-on-error-container: #8c1d18;
+
+  --m-warn: #8f6c00;
+  --m-warn-container: #ffe08a;
+  --m-warn-soft: #fff3ce;
+  --m-warn-border: #e6c24a;
+  --m-warn-mid: #d5a400;
+  --m-on-warn: #4a3800;
+
+  --m-inverse-surface: #303034;
+  --m-inverse-on-surface: #f1f1f5;
+
+  /* ---- shadcn roles ← M3 ---- */
+  --background: var(--m-surface);
+  --foreground: var(--m-on-surface);
+  --card: var(--m-sc-lowest);
+  --card-foreground: var(--m-on-surface);
+  --popover: var(--m-sc-low);
+  --popover-foreground: var(--m-on-surface);
+  --primary: var(--m-primary);
+  --primary-foreground: var(--m-on-primary);
+  --secondary: var(--m-secondary-container);
+  --secondary-foreground: var(--m-on-secondary-container);
+  --muted: var(--m-sc);
+  --muted-foreground: var(--m-on-surface-var);
+  --accent: var(--m-sc-high);
+  --accent-foreground: var(--m-on-surface);
+  --destructive: var(--m-error);
+  --border: var(--m-sc-highest);
+  --input: var(--m-outline-variant);
+  --ring: var(--m-primary);
+  --chart-1: var(--m-primary);
+  --chart-2: var(--m-tertiary);
+  --chart-3: var(--m-warn);
+  --chart-4: var(--m-error);
+  --chart-5: var(--m-on-surface-var);
+  --sidebar: var(--m-sc-low);
+  --sidebar-foreground: var(--m-on-surface);
+  --sidebar-primary: var(--m-primary);
+  --sidebar-primary-foreground: var(--m-on-primary);
+  --sidebar-accent: var(--m-sc-high);
+  --sidebar-accent-foreground: var(--m-on-surface);
+  --sidebar-border: var(--m-sc-highest);
+  --sidebar-ring: var(--m-primary);
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+/* ---- Material 3 roles · dark (follows the device) ---- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --m-surface: #131314;
+    --m-sc-lowest: #0e0e0f;
+    --m-sc-low: #1b1b1f;
+    --m-sc: #1e1f20;
+    --m-sc-high: #282a2c;
+    --m-sc-highest: #333537;
+    --m-on-surface: #e3e3e7;
+    --m-on-surface-strong: #c4c7c5;
+    --m-on-surface-var: #c4c7c5;
+    --m-outline: #8e918f;
+    --m-outline-variant: #444746;
+
+    --m-primary: #a8c7fa;
+    --m-on-primary: #062e6f;
+    --m-primary-container: #0842a0;
+    --m-primary-soft: #082e63;
+    --m-primary-border: #0842a0;
+    --m-primary-strong: #d3e3fd;
+    --m-primary-stronger: #ecf3fe;
+    --m-secondary-container: #004a77;
+    --m-on-secondary-container: #c2e7ff;
+
+    --m-tertiary: #6dd58c;
+    --m-tertiary-container: #0f5223;
+    --m-tertiary-soft: #0a3d18;
+    --m-tertiary-border: #146c2e;
+    --m-tertiary-bright: #146c2e;
+    --m-on-tertiary-container: #c4eed0;
+
+    --m-error: #f2b8b5;
+    --m-error-container: #601410;
+    --m-error-border: #8c1d18;
+    --m-error-bright: #8c1d18;
+    --m-on-error-container: #f9dedc;
+
+    --m-warn: #ffe08a;
+    --m-warn-container: #4a3800;
+    --m-warn-soft: #3a2f00;
+    --m-warn-border: #6b5600;
+    --m-warn-mid: #d5a400;
+    --m-on-warn: #ffe08a;
+
+    --m-inverse-surface: #e3e3e7;
+    --m-inverse-on-surface: #303034;
+  }
 }
 
 @layer base {
@@ -121,11 +294,16 @@
     @apply border-border outline-ring/50;
   }
   html {
-    /* the app is deliberately light-mode only */
-    color-scheme: light;
+    color-scheme: light dark;
   }
   body {
     @apply bg-background text-foreground;
+    letter-spacing: 0.0071em;
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 3px solid var(--m-primary);
+    outline-offset: 2px;
   }
 }
 
@@ -139,15 +317,17 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .territory-pulse { animation: none; }
+  * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
 
+/* Map labels stay light-on-light: they sit on the (light) map tiles, not the app surface */
 .territory-label {
   background: rgba(255, 255, 255, 0.85);
   border: 1px solid rgba(100, 116, 139, 0.35);
   border-radius: 999px;
   box-shadow: none;
   color: #1e293b;
-  font-weight: 600;
+  font-weight: 500;
   font-size: 11px;
   padding: 2px 8px;
 }
@@ -164,7 +344,7 @@
   border-radius: 999px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
   color: #0f172a;
-  font-weight: 600;
+  font-weight: 500;
   font-size: 10.5px;
   padding: 1px 7px;
 }

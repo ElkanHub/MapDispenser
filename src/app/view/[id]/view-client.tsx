@@ -115,7 +115,7 @@ export default function ViewTerritoryClient({ territory }: { territory: Territor
                                 />
                                 {imageState === 'loading' && <span className="absolute inset-0 animate-pulse bg-slate-200" />}
                                 {imageState === 'ready' && (
-                                    <span className="absolute bottom-3 right-3 flex items-center gap-1 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
+                                    <span className="absolute bottom-3 right-3 flex items-center gap-1 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-[#fff]">
                                         <ZoomIn className="h-3.5 w-3.5" />Tap to enlarge
                                     </span>
                                 )}
@@ -165,7 +165,7 @@ export default function ViewTerritoryClient({ territory }: { territory: Territor
                                 : 'mx-auto h-full w-full cursor-zoom-in object-contain'}
                         />
                     </div>
-                    <Button size="icon" className="absolute right-4 top-4 rounded-full border-0 bg-white/15 text-white hover:bg-white/25" onClick={() => setShowLightbox(false)}>
+                    <Button size="icon" className="absolute right-4 top-4 rounded-full border-0 bg-[#ffffff26] text-[#fff] hover:bg-[#ffffff40]" onClick={() => setShowLightbox(false)}>
                         <X className="h-5 w-5" /><span className="sr-only">Close</span>
                     </Button>
                     <Button variant="outline" className="absolute bottom-6 left-1/2 -translate-x-1/2 gap-2" onClick={handleDownload}>

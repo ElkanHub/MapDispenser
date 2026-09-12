@@ -28,12 +28,16 @@ export function RoleNav() {
 }
 
 function NavTab({ href, label, icon: Icon, active }: { href: string; label: string; icon: typeof Home; active: boolean }) {
+    // M3 bottom bar: the active destination is a tonal pill behind the icon,
+    // with the label always visible underneath.
     return (
         <Link
             href={href}
-            className={`flex flex-1 flex-col items-center gap-1 rounded-lg py-2 text-[11px] font-semibold ${active ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+            className={`flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[11px] font-medium ${active ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
         >
-            <Icon className="h-5 w-5" />
+            <span className={`grid h-8 w-14 place-items-center rounded-full transition-colors duration-300 ${active ? 'bg-tonal text-on-tonal' : ''}`}>
+                <Icon className="h-5 w-5" />
+            </span>
             {label}
         </Link>
     );
@@ -42,8 +46,8 @@ function NavTab({ href, label, icon: Icon, active }: { href: string; label: stri
 function NavBar({ tabs }: { tabs: { href: string; label: string; icon: typeof Home; exact?: boolean }[] }) {
     const pathname = usePathname();
     return (
-        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur">
-            <div className="mx-auto flex max-w-md items-stretch gap-1 px-2 pb-[max(env(safe-area-inset-bottom),6px)] pt-1">
+        <nav className="fixed inset-x-0 bottom-0 z-40 bg-slate-100/95 backdrop-blur">
+            <div className="mx-auto flex max-w-md items-stretch gap-1 px-2 pb-[max(env(safe-area-inset-bottom),6px)] pt-1.5">
                 {tabs.map((tab) => (
                     <NavTab
                         key={tab.href}

@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Roboto_Flex, Roboto_Mono } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 
 import PwaProvider from "@/components/pwa-provider";
 
-const geistSans = Geist({
+// Material 3 type: Roboto Flex for UI, Roboto Mono for codes and data.
+// The CSS variable names are kept so every existing class keeps working.
+const robotoFlex = Roboto_Flex({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
+const robotoMono = Roboto_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
@@ -31,7 +33,10 @@ export const metadata: Metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#4f46e5",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FDFCFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#131314" },
+  ],
 };
 
 export default function RootLayout({
@@ -42,9 +47,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${robotoFlex.variable} ${robotoMono.variable} antialiased`}
       >
-        <NextTopLoader color="#4f46e5" height={3} showSpinner={false} shadow="0 0 8px #4f46e5" />
+        <NextTopLoader color="#4285F4" height={3} showSpinner={false} shadow="0 0 8px #4285F4" />
         <PwaProvider />
         {children}
       </body>

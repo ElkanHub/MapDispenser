@@ -62,7 +62,7 @@ export default function TerritoryPanel({
                             interactive={false}
                             className="h-full w-full"
                         />
-                        <span className="absolute bottom-3 right-3 z-[600] flex items-center gap-1 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
+                        <span className="absolute bottom-3 right-3 z-[600] flex items-center gap-1 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-[#fff]">
                             <Compass className="h-3.5 w-3.5" />Tap for live map
                         </span>
                     </Link>
