@@ -1,3 +1,8 @@
 {
-  "assignments": []
+  "assignments": [
+    {
+      "territoryId": 1,
+      "assignedAt": "2026-09-12T03:01:36.277Z"
+    }
+  ]
 }

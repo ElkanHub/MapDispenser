@@ -120,7 +120,7 @@ export default function ImportPage() {
                             <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 shadow-sm">
                                 <LiveMap
                                     shapes={included.map((item) => ({ id: item.key, name: item.name, geometry: item.geometry, color: item.color || undefined }))}
-                                    className="h-56 w-full"
+                                    className="h-72 w-full"
                                 />
                             </div>
                         )}

@@ -1,278 +1,418 @@
 [
-    {
-        "title": "Territory Grouping and Preview",
-        "message": "This is a new feature that groups territories together. This allows you to easily identify and assign territories from the list of territories. You can also now preview the territories on the list before assigning them by clicking on the image. We hope you enjoy this new feature."
+  {
+    "title": "Territory Grouping and Preview",
+    "message": "This is a new feature that groups territories together. This allows you to easily identify and assign territories from the list of territories. You can also now preview the territories on the list before assigning them by clicking on the image. We hope you enjoy this new feature."
+  },
+  {
+    "id": 1,
+    "territory_name": "KHT 1",
+    "map_link": "https://maps.app.goo.gl/VJEx7y6rwALr6qYB6",
+    "map_image_url": "/maps/kht1.png",
+    "map_description": "This territory includes Bro Gokah's house and his immediate neighbors. It extends one lane behind the house and cuts right back to the road leading to the Kingdom Hall.",
+    "active": true,
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -0.182,
+            5.605,
+            0
+          ],
+          [
+            -0.1795,
+            5.6052,
+            0
+          ],
+          [
+            -0.1793,
+            5.6031,
+            0
+          ],
+          [
+            -0.1818,
+            5.6029,
+            0
+          ],
+          [
+            -0.182,
+            5.605,
+            0
+          ]
+        ]
+      ]
     },
-    {
-        "id": 1,
-        "territory_name": "KHT 1",
-        "map_link": "https://maps.app.goo.gl/VJEx7y6rwALr6qYB6",
-        "map_image_url": "/maps/kht1.png",
-        "map_description": "This territory includes Bro Gokah's house and his immediate neighbors. It extends one lane behind the house and cuts right back to the road leading to the Kingdom Hall.",
-        "active": true
+    "color": "#d96d2f"
+  },
+  {
+    "id": 2,
+    "territory_name": "KHT 2",
+    "map_link": "https://maps.app.goo.gl/KFHZti7tp9cHHLED8",
+    "map_image_url": "/maps/kht2.png",
+    "map_description": "This territory starts two lanes behind Bro Gokah's house and extends two lanes further.",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 3,
+    "territory_name": "KHT 3",
+    "map_link": "https://maps.app.goo.gl/FEbemRPXsJJrwSh97",
+    "map_image_url": "/maps/kht3.png",
+    "map_description": "The location on the Google map is the start of the territory which then covers two lanes down and cuts to the Maryland School. ",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 4,
+    "territory_name": "KHT 4",
+    "map_link": "https://maps.app.goo.gl/AgXGEbTgpZXrkwyG8",
+    "map_image_url": "/maps/kht4.png",
+    "map_description": "%%This territory is a big dispersed settlement behind the Deeperlife Land. This territory will be worked by more than two groups of publishers. The directions on the map starts from Bro Gokah's house to the starting point of the territory.",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 5,
+    "territory_name": "KHT 5",
+    "map_link": "https://maps.app.goo.gl/toJowLJWP5DeZYmA9",
+    "map_image_url": "/maps/kht5.png",
+    "map_description": "This territory includes the Kingdom Hall and stretches to the next junction after the Celestial school wall",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 6,
+    "territory_name": "KHT 6",
+    "map_link": "https://maps.app.goo.gl/s44AP5SKMAeTGtJA8",
+    "map_image_url": "/maps/kht6.png",
+    "map_description": "This territory begins from Comodor Villa Junction opposite the network pole to the Celestial school junction that leads to the Kingdom Hall from the main road. It cuts down two lanes in, towards the Kingdom Hall.",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 7,
+    "territory_name": "KHT 7",
+    "map_link": "https://maps.app.goo.gl/XZxn2NGnmsjZU1Vk9",
+    "map_image_url": "/maps/kht7.png",
+    "map_description": "This territory starts frm the next junctions after the Big house on the left coming down from the Celestial Junction. It covers the whole sectiond towards the Kingdom hall and ends at the white house adjacent the shop after the Kingdom Hall.",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 8,
+    "territory_name": "KHT 8",
+    "map_link": "https://www.google.com/maps",
+    "map_image_url": "/maps/kht8.png",
+    "map_description": "%%%This is a vast dispersed territory located at the Maryland School. This territory can be worked by more tha three groups. The terrain and houses can only be accessed by foot.",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 9,
+    "territory_name": "KHT 9",
+    "map_link": "https://maps.app.goo.gl/vBfWKYXHxVG3xEce9",
+    "map_image_url": "/maps/kht9.png",
+    "map_description": "This territory starts from the junction of the new chruch on the road leading to the kingdom Hall. It cuts down and includes the Celestial school.",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 10,
+    "territory_name": "KHT 10",
+    "map_link": "https://maps.app.goo.gl/xcDvJsw6wPq4CgsW9",
+    "map_image_url": "/maps/kht10.png",
+    "map_description": "This territory starts from the celestial school junction down to the junction rigth where the new church is being built. It covers the entire right side of the road and stretches to the jucntion opposite Club Safari.",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 11,
+    "territory_name": "KHT 11",
+    "map_link": "https://maps.app.goo.gl/kApE6MNSq9GrD7bh9",
+    "map_image_url": "/maps/kht11.png",
+    "map_description": "%%%This territory streches the left side from the Noble estate Junction down the road. This territory is huge and disperesed. It can be worked by more than three groups of publishers.",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 12,
+    "territory_name": "AT 1",
+    "map_link": "https://maps.app.goo.gl/9aa7Gsi7xUYqHtYn7",
+    "map_image_url": "/maps/at1.png",
+    "map_description": "This territory starts from the junction opposite Oasis International Training Centre. It continues ahead and ends at bridge. The territory covers all the way down to the sea including the beach.",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 13,
+    "territory_name": "AT 2",
+    "map_link": "https://maps.app.goo.gl/A1JpUNCv7okZpcWAA",
+    "map_image_url": "/maps/at2.png",
+    "map_description": "This territory starts from the junction that goes to Bro.Vandesin's place and ends at the junction opposite Oasis International Training Centre. This territory covers all the way down to the sea, including the beach.",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 14,
+    "territory_name": "AT 3",
+    "map_link": "https://maps.app.goo.gl/88QFAtBQUK4R9vKPA",
+    "map_image_url": "/maps/at3.png",
+    "map_description": "This territory starts from the junction that goes to the Abia D/A school and ends at the junction that goes to Bro.Vandesin's place. It covers all the way down to the sea, including the beach.",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 15,
+    "territory_name": "AT 4",
+    "map_link": "https://maps.app.goo.gl/mBG3Ba123or5oqYn7",
+    "map_image_url": "/maps/at4.png",
+    "map_description": "This territory starts from the junction that goes to Bro.Sewornu's place and ends at the junction that goes to Abia D/A school. It covers all the way down to the sea, including the beach.",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 16,
+    "territory_name": "AT 5",
+    "map_link": "https://maps.app.goo.gl/wauxM9pmTwBnsMAm9",
+    "map_image_url": "/maps/at5.png",
+    "map_description": ".",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 17,
+    "territory_name": "AT 6",
+    "map_link": "https://maps.app.goo.gl/2ssFK2s3yWnsx82J7",
+    "map_image_url": "/maps/at6.png",
+    "map_description": ".",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 18,
+    "territory_name": "AT 7",
+    "map_link": "https://maps.app.goo.gl/Lwr82xruA1dQgMwy7",
+    "map_image_url": "/maps/at7.png",
+    "map_description": ".",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 19,
+    "territory_name": "AT 8",
+    "map_link": "https://maps.app.goo.gl/SBBAWTv2cigaoi4c6",
+    "map_image_url": "/maps/at8.jpg",
+    "map_description": ".",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 20,
+    "territory_name": "AT 9",
+    "map_link": "https://www.google.com/maps",
+    "map_image_url": "/maps/at9.jpg",
+    "map_description": ".",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 21,
+    "territory_name": "AT 10",
+    "map_link": "https://www.google.com/maps",
+    "map_image_url": "/maps/at10.jpg",
+    "map_description": ".",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 22,
+    "territory_name": "WT 1",
+    "map_link": "https://maps.app.goo.gl/6K4tzo9uQ2MojRUc7",
+    "map_image_url": "/maps/wt1.jpg",
+    "map_description": ".",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 23,
+    "territory_name": "WT 2",
+    "map_link": "https://maps.app.goo.gl/XGT9C6J7z2M3ScrY9",
+    "map_image_url": "/maps/wt2.jpg",
+    "map_description": ".",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 24,
+    "territory_name": "WT 3",
+    "map_link": "https://maps.app.goo.gl/E2S6xFPp7jtb84bd6",
+    "map_image_url": "/maps/wt3.jpg",
+    "map_description": ".",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 25,
+    "territory_name": "WT 4",
+    "map_link": "https://maps.app.goo.gl/Njf1VaHJ6HVqQEw47",
+    "map_image_url": "/maps/wt4.jpg",
+    "map_description": ".",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 26,
+    "territory_name": "WT 5",
+    "map_link": "https://maps.app.goo.gl/MYZEwcuB6oYi6mm79",
+    "map_image_url": "/maps/wt5.jpg",
+    "map_description": ".",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 27,
+    "territory_name": "WT 6",
+    "map_link": "https://maps.app.goo.gl/v1AZ9F3ssKkYL1hQ7",
+    "map_image_url": "/maps/wt6.jpg",
+    "map_description": ".",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 28,
+    "territory_name": "WT 7",
+    "map_link": "https://maps.app.goo.gl/WC5U2gcKgiYkgd746",
+    "map_image_url": "/maps/wt7.jpg",
+    "map_description": ".",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 29,
+    "territory_name": "WT 8",
+    "map_link": "https://maps.app.goo.gl/ecd1pVhqUouzbBQo8",
+    "map_image_url": "/maps/wt8.jpg",
+    "map_description": ".",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 30,
+    "territory_name": "WT 9",
+    "map_link": "https://maps.app.goo.gl/nibuPqBMJFHT1PYJ9",
+    "map_image_url": "/maps/wt9.jpg",
+    "map_description": ".",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 31,
+    "territory_name": "WT 10",
+    "map_link": "https://maps.app.goo.gl/nibuPqBMJFHT1PYJ9",
+    "map_image_url": "/maps/wt10.jpg",
+    "map_description": ".",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 32,
+    "territory_name": "WT 11",
+    "map_link": "https://maps.app.goo.gl/EHpaPNj6DLVi12eH6",
+    "map_image_url": "/maps/wt11.jpg",
+    "map_description": ".",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 33,
+    "territory_name": "WT 12",
+    "map_link": "https://maps.app.goo.gl/sHumiYCEMBD9cEj66",
+    "map_image_url": "/maps/wt12.jpg",
+    "map_description": ".",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 34,
+    "territory_name": "WT 13",
+    "map_link": "https://maps.app.goo.gl/x1TPPbTZ4L9KQecE6",
+    "map_image_url": "/maps/wt13.jpg",
+    "map_description": ".",
+    "active": true,
+    "geometry": null,
+    "color": ""
+  },
+  {
+    "id": 35,
+    "territory_name": "New Area Quarry Rd",
+    "map_link": "",
+    "map_image_url": "",
+    "map_description": "",
+    "active": true,
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -0.179,
+            5.6052,
+            0
+          ],
+          [
+            -0.1765,
+            5.6054,
+            0
+          ],
+          [
+            -0.1763,
+            5.6033,
+            0
+          ],
+          [
+            -0.1788,
+            5.6031,
+            0
+          ],
+          [
+            -0.179,
+            5.6052,
+            0
+          ]
+        ]
+      ]
     },
-    {
-        "id": 2,
-        "territory_name": "KHT 2",
-        "map_link": "https://maps.app.goo.gl/KFHZti7tp9cHHLED8",
-        "map_image_url": "/maps/kht2.png",
-        "map_description": "This territory starts two lanes behind Bro Gokah's house and extends two lanes further.",
-        "active": true
-    },
-    {
-        "id": 3,
-        "territory_name": "KHT 3",
-        "map_link": "https://maps.app.goo.gl/FEbemRPXsJJrwSh97",
-        "map_image_url": "/maps/kht3.png",
-        "map_description": "The location on the Google map is the start of the territory which then covers two lanes down and cuts to the Maryland School. ",
-        "active": true
-    },
-    {
-        "id": 4,
-        "territory_name": "KHT 4",
-        "map_link": "https://maps.app.goo.gl/AgXGEbTgpZXrkwyG8",
-        "map_image_url": "/maps/kht4.png",
-        "map_description": "%%This territory is a big dispersed settlement behind the Deeperlife Land. This territory will be worked by more than two groups of publishers. The directions on the map starts from Bro Gokah's house to the starting point of the territory.",
-        "active": true
-    },
-    {
-        "id": 5,
-        "territory_name": "KHT 5",
-        "map_link": "https://maps.app.goo.gl/toJowLJWP5DeZYmA9",
-        "map_image_url": "/maps/kht5.png",
-        "map_description": "This territory includes the Kingdom Hall and stretches to the next junction after the Celestial school wall",
-        "active": true
-    },
-    {
-        "id": 6,
-        "territory_name": "KHT 6",
-        "map_link": "https://maps.app.goo.gl/s44AP5SKMAeTGtJA8",
-        "map_image_url": "/maps/kht6.png",
-        "map_description": "This territory begins from Comodor Villa Junction opposite the network pole to the Celestial school junction that leads to the Kingdom Hall from the main road. It cuts down two lanes in, towards the Kingdom Hall.",
-        "active": true
-    },
-    {
-        "id": 7,
-        "territory_name": "KHT 7",
-        "map_link": "https://maps.app.goo.gl/XZxn2NGnmsjZU1Vk9",
-        "map_image_url": "/maps/kht7.png",
-        "map_description": "This territory starts frm the next junctions after the Big house on the left coming down from the Celestial Junction. It covers the whole sectiond towards the Kingdom hall and ends at the white house adjacent the shop after the Kingdom Hall.",
-        "active": true
-    },
-    {
-        "id": 8,
-        "territory_name": "KHT 8",
-        "map_link": "https://www.google.com/maps",
-        "map_image_url": "/maps/kht8.png",
-        "map_description": "%%%This is a vast dispersed territory located at the Maryland School. This territory can be worked by more tha three groups. The terrain and houses can only be accessed by foot.",
-        "active": true
-    },
-    {
-        "id": 9,
-        "territory_name": "KHT 9",
-        "map_link": "https://maps.app.goo.gl/vBfWKYXHxVG3xEce9",
-        "map_image_url": "/maps/kht9.png",
-        "map_description": "This territory starts from the junction of the new chruch on the road leading to the kingdom Hall. It cuts down and includes the Celestial school.",
-        "active": true
-    },
-    {
-        "id": 10,
-        "territory_name": "KHT 10",
-        "map_link": "https://maps.app.goo.gl/xcDvJsw6wPq4CgsW9",
-        "map_image_url": "/maps/kht10.png",
-        "map_description": "This territory starts from the celestial school junction down to the junction rigth where the new church is being built. It covers the entire right side of the road and stretches to the jucntion opposite Club Safari.",
-        "active": true
-    },
-    {
-        "id": 11,
-        "territory_name": "KHT 11",
-        "map_link": "https://maps.app.goo.gl/kApE6MNSq9GrD7bh9",
-        "map_image_url": "/maps/kht11.png",
-        "map_description": "%%%This territory streches the left side from the Noble estate Junction down the road. This territory is huge and disperesed. It can be worked by more than three groups of publishers.",
-        "active": true
-    },
-    {
-        "id": 12,
-        "territory_name": "AT 1",
-        "map_link": "https://maps.app.goo.gl/9aa7Gsi7xUYqHtYn7",
-        "map_image_url": "/maps/at1.png",
-        "map_description": "This territory starts from the junction opposite Oasis International Training Centre. It continues ahead and ends at bridge. The territory covers all the way down to the sea including the beach.",
-        "active": true
-    },
-    {
-        "id": 13,
-        "territory_name": "AT 2",
-        "map_link": "https://maps.app.goo.gl/A1JpUNCv7okZpcWAA",
-        "map_image_url": "/maps/at2.png",
-        "map_description": "This territory starts from the junction that goes to Bro.Vandesin's place and ends at the junction opposite Oasis International Training Centre. This territory covers all the way down to the sea, including the beach.",
-        "active": true
-    },
-    {
-        "id": 14,
-        "territory_name": "AT 3",
-        "map_link": "https://maps.app.goo.gl/88QFAtBQUK4R9vKPA",
-        "map_image_url": "/maps/at3.png",
-        "map_description": "This territory starts from the junction that goes to the Abia D/A school and ends at the junction that goes to Bro.Vandesin's place. It covers all the way down to the sea, including the beach.",
-        "active": true
-    },
-    {
-        "id": 15,
-        "territory_name": "AT 4",
-        "map_link": "https://maps.app.goo.gl/mBG3Ba123or5oqYn7",
-        "map_image_url": "/maps/at4.png",
-        "map_description": "This territory starts from the junction that goes to Bro.Sewornu's place and ends at the junction that goes to Abia D/A school. It covers all the way down to the sea, including the beach.",
-        "active": true
-    },
-    {
-        "id": 16,
-        "territory_name": "AT 5",
-        "map_link": "https://maps.app.goo.gl/wauxM9pmTwBnsMAm9",
-        "map_image_url": "/maps/at5.png",
-        "map_description": ".",
-        "active": true
-    },
-    {
-        "id": 17,
-        "territory_name": "AT 6",
-        "map_link": "https://maps.app.goo.gl/2ssFK2s3yWnsx82J7",
-        "map_image_url": "/maps/at6.png",
-        "map_description": ".",
-        "active": true
-    },
-    {
-        "id": 18,
-        "territory_name": "AT 7",
-        "map_link": "https://maps.app.goo.gl/Lwr82xruA1dQgMwy7",
-        "map_image_url": "/maps/at7.png",
-        "map_description": ".",
-        "active": true
-    },
-    {
-        "id": 19,
-        "territory_name": "AT 8",
-        "map_link": "https://maps.app.goo.gl/SBBAWTv2cigaoi4c6",
-        "map_image_url": "/maps/at8.jpg",
-        "map_description": ".",
-        "active": true
-    },
-    {
-        "id": 20,
-        "territory_name": "AT 9",
-        "map_link": "https://www.google.com/maps",
-        "map_image_url": "/maps/at9.jpg",
-        "map_description": ".",
-        "active": true
-    },
-    {
-        "id": 21,
-        "territory_name": "AT 10",
-        "map_link": "https://www.google.com/maps",
-        "map_image_url": "/maps/at10.jpg",
-        "map_description": ".",
-        "active": true
-    },
-    {
-        "id": 22,
-        "territory_name": "WT 1",
-        "map_link": "https://maps.app.goo.gl/6K4tzo9uQ2MojRUc7",
-        "map_image_url": "/maps/wt1.jpg",
-        "map_description": ".",
-        "active": true
-    },
-    {
-        "id": 23,
-        "territory_name": "WT 2",
-        "map_link": "https://maps.app.goo.gl/XGT9C6J7z2M3ScrY9",
-        "map_image_url": "/maps/wt2.jpg",
-        "map_description": ".",
-        "active": true
-    },
-    {
-        "id": 24,
-        "territory_name": "WT 3",
-        "map_link": "https://maps.app.goo.gl/E2S6xFPp7jtb84bd6",
-        "map_image_url": "/maps/wt3.jpg",
-        "map_description": ".",
-        "active": true
-    },
-    {
-        "id": 25,
-        "territory_name": "WT 4",
-        "map_link": "https://maps.app.goo.gl/Njf1VaHJ6HVqQEw47",
-        "map_image_url": "/maps/wt4.jpg",
-        "map_description": ".",
-        "active": true
-    },
-    {
-        "id": 26,
-        "territory_name": "WT 5",
-        "map_link": "https://maps.app.goo.gl/MYZEwcuB6oYi6mm79",
-        "map_image_url": "/maps/wt5.jpg",
-        "map_description": ".",
-        "active": true
-    },
-    {
-        "id": 27,
-        "territory_name": "WT 6",
-        "map_link": "https://maps.app.goo.gl/v1AZ9F3ssKkYL1hQ7",
-        "map_image_url": "/maps/wt6.jpg",
-        "map_description": ".",
-        "active": true
-    },
-    {
-        "id": 28,
-        "territory_name": "WT 7",
-        "map_link": "https://maps.app.goo.gl/WC5U2gcKgiYkgd746",
-        "map_image_url": "/maps/wt7.jpg",
-        "map_description": ".",
-        "active": true
-    },
-    {
-        "id": 29,
-        "territory_name": "WT 8",
-        "map_link": "https://maps.app.goo.gl/ecd1pVhqUouzbBQo8",
-        "map_image_url": "/maps/wt8.jpg",
-        "map_description": ".",
-        "active": true
-    },
-    {
-        "id": 30,
-        "territory_name": "WT 9",
-        "map_link": "https://maps.app.goo.gl/nibuPqBMJFHT1PYJ9",
-        "map_image_url": "/maps/wt9.jpg",
-        "map_description": ".",
-        "active": true
-    },
-    {
-        "id": 31,
-        "territory_name": "WT 10",
-        "map_link": "https://maps.app.goo.gl/nibuPqBMJFHT1PYJ9",
-        "map_image_url": "/maps/wt10.jpg",
-        "map_description": ".",
-        "active": true
-    },
-    {
-        "id": 32,
-        "territory_name": "WT 11",
-        "map_link": "https://maps.app.goo.gl/EHpaPNj6DLVi12eH6",
-        "map_image_url": "/maps/wt11.jpg",
-        "map_description": ".",
-        "active": true
-    },
-    {
-        "id": 33,
-        "territory_name": "WT 12",
-        "map_link": "https://maps.app.goo.gl/sHumiYCEMBD9cEj66",
-        "map_image_url": "/maps/wt12.jpg",
-        "map_description": ".",
-        "active": true
-    },
-    {
-        "id": 34,
-        "territory_name": "WT 13",
-        "map_link": "https://maps.app.goo.gl/x1TPPbTZ4L9KQecE6",
-        "map_image_url": "/maps/wt13.jpg",
-        "map_description": ".",
-        "active": true
-    }
+    "color": "#1ea03b"
+  }
 ]

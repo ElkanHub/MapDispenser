@@ -79,12 +79,18 @@ export default function LiveMap({
                     touchZoom: interactive,
                     doubleClickZoom: interactive,
                     keyboard: interactive,
+                    // Google-Earth-feel gestures: fractional pinch zoom, no rubber-banding
+                    zoomSnap: 0.25,
+                    zoomDelta: 0.5,
+                    wheelPxPerZoomLevel: 120,
+                    bounceAtZoomLimits: false,
+                    inertia: true,
                 });
+                map.attributionControl.setPrefix('');
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     maxZoom: 19,
-                    attribution: '&copy; OpenStreetMap contributors',
+                    attribution: '&copy; OpenStreetMap',
                 }).addTo(map);
-                if (interactive) L.control.zoom({ position: 'bottomright' }).addTo(map);
                 map.on('dragstart', () => { followRef.current = false; });
                 mapRef.current = map;
             }
@@ -184,13 +190,13 @@ export default function LiveMap({
                         type="button"
                         onClick={recenter}
                         aria-label="Center on my location"
-                        className="absolute right-3 top-3 z-[500] flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-indigo-600 shadow-md active:scale-95"
+                        className="absolute right-3 top-[max(env(safe-area-inset-top),12px)] z-[500] flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-indigo-600 shadow-md backdrop-blur active:scale-95"
                     >
                         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3" /><path d="M12 2v3m0 14v3M2 12h3m14 0h3" strokeLinecap="round" /></svg>
                     </button>
 
                     {highlight && inside !== null && (
-                        <div className={`absolute left-1/2 top-3 z-[500] -translate-x-1/2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold shadow-md ${inside ? 'bg-emerald-600 text-white' : 'bg-white text-slate-700 border border-slate-200'}`}>
+                        <div className={`pointer-events-none absolute left-1/2 top-[max(env(safe-area-inset-top),12px)] z-[500] -translate-x-1/2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold shadow-md ${inside ? 'bg-emerald-600 text-white' : 'bg-white/95 text-slate-700 border border-slate-200 backdrop-blur'}`}>
                             {inside ? `You're inside ${highlight.name}` : `You're outside ${highlight.name}`}
                         </div>
                     )}

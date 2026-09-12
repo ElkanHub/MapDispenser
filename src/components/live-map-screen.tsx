@@ -29,19 +29,22 @@ export default function LiveMapScreen({ territory, backHref }: { territory: Pane
             <Link
                 href={backHref}
                 aria-label="Back"
-                className="absolute left-3 top-3 z-[600] flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-md active:scale-95"
+                className="absolute left-3 top-[max(env(safe-area-inset-top),12px)] z-[600] flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-md backdrop-blur active:scale-95"
             >
                 <ArrowLeft className="h-5 w-5" />
             </Link>
 
-            <div className="absolute inset-x-0 bottom-0 z-[600] p-4 pb-[max(env(safe-area-inset-bottom),16px)]">
-                <div className="mx-auto flex w-full max-w-md items-center gap-3">
-                    <div className="flex-1 rounded-xl border border-slate-200 bg-white/95 px-4 py-3 shadow-lg backdrop-blur">
-                        <p className="text-sm font-bold text-slate-900">{territory.territory_name}</p>
-                        <p className="text-xs text-slate-500">Stay within the pulsing boundary</p>
-                    </div>
+            {/* compact floating chips — the map stays visible and touchable around them */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[600] p-3 pb-[max(env(safe-area-inset-bottom),12px)]">
+                <div className="mx-auto flex w-full max-w-md items-center justify-center gap-2">
+                    <span className="pointer-events-auto rounded-full border border-slate-200 bg-white/95 px-4 py-2.5 text-sm font-bold text-slate-900 shadow-lg backdrop-blur">
+                        {territory.territory_name}
+                    </span>
                     {navUrl && (
-                        <Button className="gap-2 py-6 shadow-lg" onClick={() => window.open(navUrl, '_blank', 'noopener,noreferrer')}>
+                        <Button
+                            className="pointer-events-auto gap-2 rounded-full px-5 py-2.5 shadow-lg"
+                            onClick={() => window.open(navUrl, '_blank', 'noopener,noreferrer')}
+                        >
                             <Navigation className="h-4 w-4" />
                             Navigate
                         </Button>
