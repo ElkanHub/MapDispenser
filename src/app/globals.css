@@ -169,3 +169,9 @@
   padding: 1px 7px;
 }
 .landmark-label::before { display: none; }
+
+/* labels toggle: hiding via CSS is instant and skips all label paint cost */
+.md-hide-labels .territory-label,
+.md-hide-labels .landmark-label {
+  display: none !important;
+}

@@ -131,6 +131,7 @@ export default function AdminDeskPage() {
                 colorBy="status"
                 onSelect={handleSelect}
                 layersClass="right-3 top-28"
+                labelsClass="right-3 top-[10.5rem]"
                 className="h-full w-full"
             />
 

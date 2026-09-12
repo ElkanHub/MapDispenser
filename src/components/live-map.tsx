@@ -33,6 +33,8 @@ interface LiveMapProps {
     interactive?: boolean;
     /** Tailwind placement classes for the basemap toggle, so pages can keep it clear of their own chips */
     layersClass?: string;
+    /** Placement for the name-labels toggle (defaults to right under the basemap toggle) */
+    labelsClass?: string;
     /** Hide the built-in circular locate button (parent renders its own via onControls) */
     hideLocateButton?: boolean;
     /** Hands the parent imperative map controls, e.g. a custom "My location" button */
@@ -45,6 +47,7 @@ const STATUS_COLORS = { available: '#059669', assigned: '#d97706', inactive: '#9
 const HIGHLIGHT_COLOR = '#4f46e5';
 const NEUTRAL_COLOR = '#64748b';
 const BASEMAP_KEY = 'md-basemap';
+const LABELS_KEY = 'md-labels';
 
 function shapeColor(shape: MapShape, highlightId: number | undefined, colorBy: 'status' | 'highlight') {
     if (shape.id === highlightId) return HIGHLIGHT_COLOR;
@@ -68,6 +71,7 @@ export default function LiveMap({
     className = '',
     interactive = true,
     layersClass = 'right-3 top-[max(env(safe-area-inset-top),12px)]',
+    labelsClass = 'right-3 top-[calc(max(env(safe-area-inset-top),12px)+56px)]',
     hideLocateButton = false,
     onControls,
 }: LiveMapProps) {
@@ -83,15 +87,26 @@ export default function LiveMap({
     const positionRef = useRef<[number, number] | null>(null);
     const [basemap, setBasemap] = useState<Basemap>('streets');
     const basemapRef = useRef<Basemap>('streets');
+    const [labelsOn, setLabelsOn] = useState(true);
 
     const highlight = shapes.find((shape) => shape.id === highlightId);
 
     // remembered per device
     useEffect(() => {
         try {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- restoring saved preferences on mount
             if (localStorage.getItem(BASEMAP_KEY) === 'satellite') setBasemap('satellite');
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- restoring saved preferences on mount
+            if (localStorage.getItem(LABELS_KEY) === '0') setLabelsOn(false);
         } catch { /* private mode */ }
     }, []);
+
+    const toggleLabels = () => {
+        setLabelsOn((prev) => {
+            try { localStorage.setItem(LABELS_KEY, prev ? '0' : '1'); } catch { /* private mode */ }
+            return !prev;
+        });
+    };
 
     const applyBasemap = useCallback((L: typeof Leaflet, map: Leaflet.Map) => {
         if (!tilesRef.current) {
@@ -285,9 +300,26 @@ export default function LiveMap({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [onControls]);
 
+    const hasLabels = landmarks.length > 0 || (shapes.length > 1 && !highlightId);
+
     return (
-        <div className={`relative overflow-hidden ${className}`}>
+        <div className={`relative overflow-hidden ${labelsOn ? '' : 'md-hide-labels'} ${className}`}>
             <div ref={containerRef} className="absolute inset-0 z-0" />
+
+            {interactive && hasLabels && (
+                <button
+                    type="button"
+                    onClick={toggleLabels}
+                    aria-label={labelsOn ? 'Hide name labels' : 'Show name labels'}
+                    className={`absolute z-[500] flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 shadow-md backdrop-blur active:scale-95 ${labelsOn ? 'bg-white/95 text-slate-700' : 'bg-white/95 text-slate-400'} ${labelsClass}`}
+                >
+                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" />
+                        <circle cx="7.5" cy="7.5" r="1" fill="currentColor" />
+                        {!labelsOn && <path d="M3 21 21 3" strokeWidth="2.4" />}
+                    </svg>
+                </button>
+            )}
 
             {interactive && (
                 <button
