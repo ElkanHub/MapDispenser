@@ -42,6 +42,28 @@ function stripHtml(value: string): string {
     return value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+// Google Earth users habitually outline territories with "Add Path" instead of
+// "Add Polygon". A path that comes back to (or near) its start is clearly meant
+// as an area, so rescue it as a polygon instead of silently dropping it.
+function closedPathToPolygon(geometry: { type?: string; coordinates?: unknown }): TerritoryGeometry | null {
+    if (geometry.type !== 'LineString' || !Array.isArray(geometry.coordinates)) return null;
+    const coords = geometry.coordinates as number[][];
+    if (coords.length < 4) return null;
+
+    const first = coords[0];
+    const last = coords[coords.length - 1];
+    const lngs = coords.map((point) => point[0]);
+    const lats = coords.map((point) => point[1]);
+    const diagonal = Math.hypot(Math.max(...lngs) - Math.min(...lngs), Math.max(...lats) - Math.min(...lats));
+    const gap = Math.hypot(first[0] - last[0], first[1] - last[1]);
+
+    // closed, or nearly closed: within ~33m or 15% of the shape's own size
+    if (gap > Math.max(0.0003, diagonal * 0.15)) return null;
+
+    const ring = gap === 0 ? coords : [...coords, first];
+    return { type: 'Polygon', coordinates: [ring] };
+}
+
 // Accepts a KMZ (zip with a .kml inside) or a bare KML file.
 export async function parseKmzOrKml(buffer: Buffer, filename: string): Promise<ParsedKml> {
     let kmlText: string;
@@ -77,7 +99,13 @@ export async function parseKmzOrKml(buffer: Buffer, filename: string): Promise<P
             ? feature.geometry.geometries
             : [feature.geometry];
 
-        const polygon = geometries.find((g) => isTerritoryGeometry(g));
+        let polygon = geometries.find((g) => isTerritoryGeometry(g));
+        if (!polygon) {
+            for (const candidate of geometries) {
+                const rescued = closedPathToPolygon(candidate as { type?: string; coordinates?: unknown });
+                if (rescued) { polygon = rescued; break; }
+            }
+        }
         const point = geometries.find((g) => g.type === 'Point');
 
         if (polygon && isTerritoryGeometry(polygon)) {
@@ -101,5 +129,23 @@ export async function parseKmzOrKml(buffer: Buffer, filename: string): Promise<P
         }
     }
 
-    return { placemarks, points };
+    // Google Earth's "My Places" export often contains whole copies of the same
+    // map several times over; collapse identical shapes so the preview is clean.
+    const seen = new Set<string>();
+    const uniquePlacemarks = placemarks.filter((placemark) => {
+        const head = (placemark.geometry.coordinates as unknown[]).flat(3).slice(0, 8)
+            .map((value) => Number(value).toFixed(5)).join(',');
+        const key = `poly|${placemark.name.toLowerCase()}|${head}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+    const uniquePoints = points.filter((point) => {
+        const key = `pin|${point.name.toLowerCase()}|${point.lng.toFixed(5)},${point.lat.toFixed(5)}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+
+    return { placemarks: uniquePlacemarks, points: uniquePoints };
 }
