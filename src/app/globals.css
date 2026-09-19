@@ -372,35 +372,31 @@
   * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
 
-/* Map labels stay light-on-light: they sit on the (light) map tiles, not the app surface */
-.territory-label {
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(100, 116, 139, 0.35);
-  border-radius: 999px;
-  box-shadow: none;
-  color: #1e293b;
-  font-weight: 500;
-  font-size: 11px;
-  padding: 2px 8px;
+/* Map name labels: bare cartographic text — no box, no border. A white halo
+   (stacked text-shadows) keeps them readable over streets and satellite alike. */
+.leaflet-tooltip.territory-label,
+.leaflet-tooltip.landmark-label {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: #1f2937;
+  font-weight: 600;
+  padding: 0;
+  text-shadow:
+    -1px -1px 0 rgba(255, 255, 255, 0.9),
+    1px -1px 0 rgba(255, 255, 255, 0.9),
+    -1px 1px 0 rgba(255, 255, 255, 0.9),
+    1px 1px 0 rgba(255, 255, 255, 0.9),
+    0 0 4px rgba(255, 255, 255, 0.9);
 }
-.territory-label::before { display: none; }
+.leaflet-tooltip.territory-label { font-size: 11.5px; letter-spacing: 0.02em; }
+.leaflet-tooltip.landmark-label { font-size: 10.5px; }
+.leaflet-tooltip.territory-label::before,
+.leaflet-tooltip.landmark-label::before { display: none !important; }
 
 .location-dot {
   filter: drop-shadow(0 1px 3px rgba(37, 99, 235, 0.5));
 }
-
-/* KMZ pin labels: always-on, readable over streets and satellite alike */
-.landmark-label {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(51, 65, 85, 0.3);
-  border-radius: 999px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
-  color: #0f172a;
-  font-weight: 500;
-  font-size: 10.5px;
-  padding: 1px 7px;
-}
-.landmark-label::before { display: none; }
 
 /* labels toggle: hiding via CSS is instant and skips all label paint cost */
 .md-hide-labels .territory-label,
